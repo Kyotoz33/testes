@@ -17,10 +17,10 @@ window.CONFIG = {
   timezone: "America/Sao_Paulo",
 
   links: [
-    { label: "GitHub", url: "https://github.com/kyotoz33", icon: "🐙" },
-    { label: "Discord", url: "https://discord.com/users/000000000000000000", icon: "💬" },
-    { label: "Twitter / X", url: "https://x.com/", icon: "🐦" },
-    { label: "YouTube", url: "https://youtube.com/", icon: "▶️" },
+    { label: "GitHub", url: "https://github.com/kyotoz33", icon: "github" },
+    { label: "Discord", url: "https://discord.com/users/000000000000000000", icon: "discord" },
+    { label: "Twitter / X", url: "https://x.com/", icon: "x" },
+    { label: "YouTube", url: "https://youtube.com/", icon: "youtube" },
   ],
 
   skills: ["JavaScript", "Python", "Discord Bots", "Design", "Games"],

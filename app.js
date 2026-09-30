@@ -15,7 +15,13 @@ if (C.bannerColor) root.style.setProperty("--banner", C.bannerColor);
 document.title = `${C.name} — Perfil`;
 $("bio").textContent = C.bio;
 $("skills").innerHTML = C.skills.map((s) => `<span>${esc(s)}</span>`).join("");
-$("links").innerHTML = C.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
+// ícones da Simple Icons (https://simpleicons.org): use o nome do site em "icon"
+$("links").innerHTML = C.links.map((l) =>
+  `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}" data-label="${esc(l.label)}">` +
+  `<img src="https://cdn.simpleicons.org/${esc(l.icon)}/white" alt="${esc(l.label)}"></a>`).join("");
+$("links").querySelectorAll("img").forEach((img) => {
+  img.onerror = () => img.replaceWith(img.parentElement.dataset.label); // sem ícone: mostra o nome
+});
 $("tz").textContent = `(${C.timezone})`;
 setInterval(() => {
   $("clock").textContent = new Date().toLocaleTimeString("pt-BR", { timeZone: C.timezone });

@@ -10,21 +10,6 @@ $("theme").onclick = () => {
   try { localStorage.setItem("theme", root.dataset.theme); } catch {}
 };
 
-// [bit da flag, nome, hash do ícone oficial em cdn.discordapp.com/badge-icons/<hash>.png]
-const FLAGS = [
-  [1 << 0, "Staff do Discord", "5e74e9b61934fc1f67c65515d1f7e60d"],
-  [1 << 1, "Parceiro", "3f9748e53446a137a052f3454e2de41e"],
-  [1 << 2, "HypeSquad Events", "bf01d1073931f921909045f3a39fd264"],
-  [1 << 3, "Bug Hunter", "2717692c7dca7289b35297368a940dd0"],
-  [1 << 6, "HypeSquad Bravery", "8a88d63823d8a71cd5e390baa45efa02"],
-  [1 << 7, "HypeSquad Brilliance", "011940fd013da3f7fb926e4a1cd2e618"],
-  [1 << 8, "HypeSquad Balance", "3aa41de486fa12454c3761e8e223442e"],
-  [1 << 9, "Early Supporter", "7060786766c9c840eb3019e725d2b358"],
-  [1 << 14, "Bug Hunter Nível 2", "848f79194d4be5ff5f81505cbd0ce1e6"],
-  [1 << 17, "Dev de Bot Verificado", "6df5892e0f35b051f8b61eace34f4967"],
-  [1 << 22, "Desenvolvedor Ativo", "6bdc42827a38498929a4920da12695d9"],
-];
-
 const TEMPLATE = `
   <div class="banner"></div>
   <header class="head">
@@ -88,7 +73,10 @@ function update(el, p) {
   q(".dot").className = "dot " + status;
   q(".dot").title = status;
 
-  setHTML(q(".badges"), FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) =>
+  // emblemas automáticos (API) + extras marcados no painel (Nitro, Boost...)
+  const autoBadges = DISCORD_FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) => [n, h]);
+  const extraBadges = (p.badges || []).map((k) => MANUAL_BADGES[k]).filter(Boolean);
+  setHTML(q(".badges"), [...autoBadges, ...extraBadges].map(([n, h]) =>
     `<img class="badge-icon" src="https://cdn.discordapp.com/badge-icons/${h}.png" alt="${n}" title="${n}" data-fallback="${n}" data-cls="badge">`).join(""));
 
   const custom = d?.activities.find((a) => a.type === 4);

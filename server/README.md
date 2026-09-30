@@ -82,3 +82,14 @@ Acesse `https://SEU-ENDERECO/` (site) e `https://SEU-ENDERECO/admin.html` (paine
 
 **Atualizar depois:** `cd /opt/perfil && sudo git pull && sudo systemctl restart perfil`.
 **Backup:** copie `/opt/perfil/server/data/` (perfis e estoque).
+
+## Emblemas extras e pessoas fora do servidor
+- **Emblemas extras:** no formulário do perfil, marque Nitro, Boost, etc. O Discord não informa esses
+  emblemas para bots, então a lista é manual. O catálogo e os ícones ficam em `badges.js`
+  (se um ícone não carregar, troque o hash dele; o site mostra o nome em texto enquanto isso).
+- **Status de outras pessoas:** o Discord só informa status de quem está em um servidor em comum com o
+  bot. O painel mostra, em cada perfil, se a pessoa está no servidor ✔ ou fora ✖, e em
+  "Mostrar o status de outras pessoas" gera o **convite do servidor** para você mandar.
+  Para gerar o convite, o bot precisa da permissão "Criar convite": use o botão
+  "Link para autorizar o bot" (ele já pede só essa permissão) e autorize no seu servidor.
+- Não usamos selfbot (viola os Termos do Discord e expõe o token da sua conta).

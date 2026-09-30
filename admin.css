@@ -50,3 +50,16 @@ label.chk input { width: auto; }
 .badge-st.ok { background: #23a55a33; color: #23a55a; }
 .badge-st.used { background: #f0b23233; color: #f0b232; }
 .item.is-used { opacity: .7; }
+
+.invite { background: var(--card); border-radius: 8px; padding: 10px 14px; margin-top: 12px; box-shadow: 0 0 0 1px var(--line); }
+.invite summary { cursor: pointer; font-weight: 600; }
+.invite p { margin: 8px 0; font-size: 13px; }
+.row-copy { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.row-copy input { flex: 1; min-width: 180px; }
+.badge-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.badge-grid label { display: flex; align-items: center; gap: 8px; text-transform: none; font-weight: 400; font-size: 13px; }
+.badge-grid input { width: auto; }
+.badge-grid img { width: 20px; height: 20px; }
+.gstat { font-size: 12px; }
+.item .info small.gstat.in { color: #23a55a; }
+.item .info small.gstat.out { color: #f0b232; }

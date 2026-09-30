@@ -35,6 +35,21 @@
       <div id="list" class="list"></div>
       <button id="add" class="btn primary">Adicionar perfil</button>
 
+      <details class="invite">
+        <summary>Mostrar o status de outras pessoas</summary>
+        <p class="muted">O Discord só informa status, jogo e música de quem está em um servidor <b>em comum com o bot</b>.
+          Mande o convite do servidor para quem você quer mostrar. Quando a pessoa entrar, o aviso
+          "fora do servidor" some sozinho.</p>
+        <div class="row-copy">
+          <button type="button" id="inv-guild" class="btn primary">Gerar convite do servidor</button>
+          <button type="button" id="inv-bot" class="btn">Link para autorizar o bot</button>
+        </div>
+        <div id="inv-out" class="row-copy" hidden>
+          <input id="inv-url" readonly>
+          <button type="button" id="inv-copy" class="btn">Copiar</button>
+        </div>
+      </details>
+
       <form id="form" class="card-form" hidden>
         <h2 id="form-title">Novo perfil</h2>
         <label>ID do Discord
@@ -54,6 +69,10 @@
           <option value="steam"><option value="telegram"><option value="whatsapp"><option value="linkedin">
           <option value="reddit"><option value="facebook">
         </datalist>
+        <fieldset>
+          <legend>Emblemas extras <small>(Nitro, Boost... que o Discord não informa sozinho)</small></legend>
+          <div id="f-badges" class="badge-grid"></div>
+        </fieldset>
         <fieldset>
           <legend>Conexões <small>(ícone = nome do site em simpleicons.org)</small></legend>
           <div id="f-links"></div>
@@ -93,6 +112,7 @@
   </main>
 
   <script src="config.js"></script>
+  <script src="badges.js"></script>
   <script src="admin.js"></script>
 </body>
 </html>

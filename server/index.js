@@ -3,7 +3,7 @@ import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, ChannelType } from "discord.js";
 
 const {
   DISCORD_TOKEN, GUILD_ID, USER_ID, ADMIN_PASSWORD,
@@ -63,6 +63,7 @@ async function getDiscord(id) {
     const acts = presence?.activities ?? [];
     const sp = acts.find((a) => a.name === "Spotify" && a.type === 2);
     return {
+      in_guild: !!member, // false = o bot não enxerga essa pessoa (não está no servidor): sem status ao vivo
       discord_user: {
         id: user.id, username: user.username, global_name: user.globalName,
         avatar: user.avatar, banner: user.banner, public_flags: user.flags?.bitfield ?? 0,
@@ -144,7 +145,8 @@ function clean(b) {
     if (icon && !/^[a-z0-9]+$/.test(icon)) return { error: `Ícone inválido: ${icon}` };
     links.push({ label: str(l.label, 30) || u.hostname, url: u.href, icon });
   }
-  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, links } };
+  const badges = [...new Set((Array.isArray(b.badges) ? b.badges : []).map((k) => str(k, 30)).filter((k) => /^[a-z0-9_]+$/.test(k)))].slice(0, 20);
+  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, links, badges } };
 }
 
 // ---------- login ----------
@@ -183,7 +185,7 @@ const fail = (res, code, message) => res.status(code).json({ success: false, err
 // serve o site pelo próprio servidor (mesma origem: sem CORS e sem domínio à parte).
 // Lista fixa de arquivos: nada de server/ (.env, dados) fica exposto.
 const SITE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const SITE_FILES = new Set(["index.html", "admin.html", "app.js", "admin.js", "bg.js", "config.js", "style.css", "admin.css"]);
+const SITE_FILES = new Set(["index.html", "admin.html", "app.js", "admin.js", "bg.js", "badges.js", "config.js", "style.css", "admin.css"]);
 app.get("/:file?", (req, res, next) => {
   const f = req.params.file || "index.html";
   if (!SITE_FILES.has(f)) return next();
@@ -234,6 +236,30 @@ app.delete("/api/profiles/:id", auth, async (req, res) => {
   profiles.splice(i, 1);
   await save();
   res.json({ success: true });
+});
+
+// ---------- convites (só com login) ----------
+// link para autorizar o bot em outro servidor (permissão mínima: criar convite)
+app.get("/api/bot-invite", auth, (_, res) => {
+  if (!client.isReady()) return fail(res, 503, "Bot offline");
+  res.json({ success: true, url: `https://discord.com/oauth2/authorize?client_id=${client.user.id}&scope=bot&permissions=1` });
+});
+
+// cria um convite permanente para o servidor do bot (para mandar às pessoas que quer mostrar)
+app.post("/api/guild-invite", auth, async (_, res) => {
+  if (!client.isReady()) return fail(res, 503, "Bot offline");
+  try {
+    const guild = await client.guilds.fetch(GUILD_ID);
+    const me = await guild.members.fetchMe();
+    const channels = await guild.channels.fetch();
+    const ch = channels.find((c) => c?.type === ChannelType.GuildText && c.permissionsFor(me)?.has("CreateInstantInvite"));
+    if (!ch) return fail(res, 403, "O bot não tem a permissão 'Criar convite'. Reautorize o bot com o link do painel.");
+    const inv = await ch.createInvite({ maxAge: 0, maxUses: 0, unique: false, reason: "Painel de perfis" });
+    res.json({ success: true, url: inv.url });
+  } catch (e) {
+    console.error(e);
+    fail(res, 500, "Não consegui criar o convite");
+  }
 });
 
 // ---------- estoque de códigos (só com login) ----------

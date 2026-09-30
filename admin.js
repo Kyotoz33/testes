@@ -42,10 +42,23 @@ async function refresh() {
     const u = p.discord?.discord_user;
     const av = u?.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64` : "";
     return `<div class="item">${av ? `<img src="${av}" alt="">` : `<div class="noav"></div>`}
-      <div class="info"><b>${esc(p.name || u?.global_name || u?.username || "Perfil")}</b><small>${esc(p.discordId)}</small></div>
+      <div class="info"><b>${esc(p.name || u?.global_name || u?.username || "Perfil")}</b><small>${esc(p.discordId)}</small>${gstat(p)}</div>
       <div class="btns"><button class="btn" data-edit="${p.id}">Editar</button><button class="btn danger" data-del="${p.id}">Excluir</button></div></div>`;
   }).join("") : `<p class="muted">Nenhum perfil ainda.</p>`;
 }
+
+// o bot enxerga essa pessoa? (precisa estar no servidor do bot para ter status ao vivo)
+function gstat(p) {
+  const d = p.discord;
+  if (!d) return `<small class="gstat">Bot offline: status indisponível</small>`;
+  return d.in_guild
+    ? `<small class="gstat in">✔ no servidor do bot (status ao vivo)</small>`
+    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`;
+}
+
+// emblemas extras (Nitro, Boost...): caixas de marcar com o ícone oficial
+$("f-badges").innerHTML = Object.entries(MANUAL_BADGES).map(([k, [name, hash]]) =>
+  `<label><input type="checkbox" value="${k}"><img src="https://cdn.discordapp.com/badge-icons/${hash}.png" alt="" onerror="this.remove()">${esc(name)}</label>`).join("");
 
 function linkRow(l = {}) {
   const row = document.createElement("div");
@@ -66,6 +79,7 @@ function openForm(p) {
   $("f-bio").value = p?.bio ?? "";
   $("f-tz").value = p?.timezone ?? "America/Sao_Paulo";
   $("f-color").value = p?.bannerColor || "#5865f2";
+  document.querySelectorAll("#f-badges input").forEach((c) => (c.checked = (p?.badges || []).includes(c.value)));
   $("f-links").innerHTML = "";
   (p?.links?.length ? p.links : [{}]).forEach(linkRow);
   $("form").hidden = false;
@@ -105,6 +119,7 @@ $("form").onsubmit = async (e) => {
     bio: $("f-bio").value,
     timezone: $("f-tz").value,
     bannerColor: $("f-color").value,
+    badges: [...document.querySelectorAll("#f-badges input:checked")].map((c) => c.value),
     links: [...$("f-links").children].map((r) => ({
       icon: r.querySelector(".l-icon").value,
       label: r.querySelector(".l-label").value,
@@ -124,6 +139,24 @@ async function show() {
   $("panel").hidden = false;
   await Promise.all([refresh(), refreshStock()]);
 }
+
+// ---------- convites ----------
+function showInvite(url) {
+  $("inv-out").hidden = false;
+  $("inv-url").value = url;
+  $("inv-url").select();
+}
+$("inv-guild").onclick = async () => {
+  msg("");
+  try { showInvite((await api("/api/guild-invite", "POST")).url); } catch (err) { msg(err.message); }
+};
+$("inv-bot").onclick = async () => {
+  msg("");
+  try { showInvite((await api("/api/bot-invite")).url); } catch (err) { msg(err.message); }
+};
+$("inv-copy").onclick = async () => {
+  msg((await copyText($("inv-url").value)) ? "Link copiado." : "Não consegui copiar; selecione e copie na mão.", true);
+};
 
 // ---------- abas ----------
 document.querySelectorAll(".tab").forEach((b) => {

@@ -1,5 +1,5 @@
 :root {
-  --page: #111214; --card: #1e1f22; --panel: #111214; --line: #2e3035;
+  --page: #050506; --card: #1e1f22; --panel: #111214; --line: #2e3035;
   --text: #f2f3f5; --muted: #949ba4; --accent: #5865f2; --banner: #5865f2;
 }
 :root[data-theme="light"] {
@@ -79,3 +79,8 @@ h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--
 .links a:hover { background: var(--line); }
 .links img { width: 20px; height: 20px; display: block; }
 :root[data-theme="light"] .links img { filter: invert(1); }
+
+#bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+:root[data-theme="light"] #bg { display: none; }
+.profile, .theme { position: relative; z-index: 1; }
+.theme { position: fixed; }

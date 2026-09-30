@@ -3,7 +3,7 @@ window.CONFIG = {
   // Seu ID numérico do Discord (Configurações > Avançado > Modo desenvolvedor,
   // depois clique direito no seu perfil > Copiar ID do usuário).
   // IMPORTANTE: entre no servidor https://discord.gg/lanyard para o status aparecer ao vivo.
-  discordId: "000000000000000000",
+  discordId: "248592001631518740",
 
   // Endereço da sua API própria (pasta server/). Se preencher, o Lanyard não é usado
   // e você não precisa entrar no servidor dele. Ex.: "https://sua-api.onrender.com"
@@ -18,7 +18,7 @@ window.CONFIG = {
 
   links: [
     { label: "GitHub", url: "https://github.com/kyotoz33", icon: "github" },
-    { label: "Discord", url: "https://discord.com/users/000000000000000000", icon: "discord" },
+    { label: "Discord", url: "https://discord.com/users/248592001631518740", icon: "discord" },
     { label: "Twitter / X", url: "https://x.com/", icon: "x" },
     { label: "YouTube", url: "https://youtube.com/", icon: "youtube" },
   ],

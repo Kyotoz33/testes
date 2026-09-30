@@ -7,45 +7,52 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button id="theme" class="theme" aria-label="Alternar tema">🌓</button>
+  <button id="theme" class="theme" aria-label="Alternar tema">◐</button>
 
-  <main class="wrap">
-    <section class="card profile" id="profile">
+  <main class="profile">
+    <div class="banner" id="banner"></div>
+
+    <header class="head">
       <div class="avatar-box">
         <img id="avatar" alt="Avatar" src="">
         <span id="dot" class="dot offline" title="offline"></span>
       </div>
-      <div class="who">
-        <h1 id="display">Carregando…</h1>
-        <p id="username" class="muted"></p>
-        <p id="custom" class="custom"></p>
-      </div>
       <div id="badges" class="badges"></div>
-    </section>
+    </header>
 
-    <section class="card" id="activities-card" hidden>
-      <h2>Agora</h2>
-      <div id="activities"></div>
-    </section>
+    <div class="body">
+      <h1 id="display">Carregando…</h1>
+      <p id="username" class="username"></p>
+      <p id="custom" class="custom"></p>
 
-    <section class="card">
-      <h2>Sobre</h2>
-      <p id="bio"></p>
-      <div id="skills" class="chips"></div>
-      <p class="muted">🕒 Hora local: <b id="clock">--:--:--</b> <span id="tz"></span></p>
-    </section>
+      <div class="panel">
+        <section>
+          <h2>Sobre mim</h2>
+          <p id="bio" class="bio"></p>
+          <div id="skills" class="chips"></div>
+        </section>
 
-    <section class="card">
-      <h2>Links</h2>
-      <div id="links" class="links"></div>
-    </section>
+        <section id="activities-card" hidden>
+          <h2>Atividade</h2>
+          <div id="activities"></div>
+        </section>
 
-    <section class="card" id="gh-card" hidden>
-      <h2>Projetos no GitHub</h2>
-      <div id="repos" class="repos"></div>
-    </section>
+        <section>
+          <h2>Hora local</h2>
+          <p><span id="clock">--:--:--</span> <span id="tz" class="muted"></span></p>
+        </section>
 
-    <footer class="muted">Feito com ❤️ · status via <a href="https://github.com/Phineas/lanyard">Lanyard</a></footer>
+        <section>
+          <h2>Links</h2>
+          <div id="links" class="links"></div>
+        </section>
+
+        <section id="gh-card" hidden>
+          <h2>Projetos</h2>
+          <div id="repos" class="repos"></div>
+        </section>
+      </div>
+    </div>
   </main>
 
   <script src="config.js"></script>

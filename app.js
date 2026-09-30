@@ -11,10 +11,11 @@ $("theme").onclick = () => {
 };
 
 // ---------- conteúdo estático ----------
+if (C.bannerColor) root.style.setProperty("--banner", C.bannerColor);
 document.title = `${C.name} — Perfil`;
 $("bio").textContent = C.bio;
 $("skills").innerHTML = C.skills.map((s) => `<span>${esc(s)}</span>`).join("");
-$("links").innerHTML = C.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.icon)} ${esc(l.label)}</a>`).join("");
+$("links").innerHTML = C.links.map((l) => `<a href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`).join("");
 $("tz").textContent = `(${C.timezone})`;
 setInterval(() => {
   $("clock").textContent = new Date().toLocaleTimeString("pt-BR", { timeZone: C.timezone });
@@ -43,6 +44,8 @@ function render(d) {
   $("avatar").src = u.avatar
     ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
+  // banner: só vem da API própria; senão usa a cor de bannerColor
+  if (u.banner) $("banner").style.backgroundImage = `url(https://cdn.discordapp.com/banners/${u.id}/${u.banner}.${u.banner.startsWith("a_") ? "gif" : "png"}?size=600)`;
   $("dot").className = "dot " + d.discord_status;
   $("dot").title = d.discord_status;
   $("badges").innerHTML = FLAGS.filter(([b]) => u.public_flags & b).map(([, n, h]) =>
@@ -64,7 +67,7 @@ function render(d) {
   if (d.listening_to_spotify && d.spotify) {
     const s = d.spotify;
     rows.push(`<div class="act"><img src="${esc(s.album_art_url)}" alt="">
-      <div><small>🎧 Ouvindo no Spotify</small><b>${esc(s.song)}</b><span>${esc(s.artist)}</span>
+      <div><small>Ouvindo Spotify</small><b>${esc(s.song)}</b><span>${esc(s.artist)}</span>
       <div class="bar"><i id="sp-bar" data-s="${s.timestamps.start}" data-e="${s.timestamps.end}"></i></div></div></div>`);
   }
   for (const a of d.activities.filter((a) => a.type !== 4 && a.name !== "Spotify")) {

@@ -9,6 +9,9 @@ window.CONFIG = {
   // e você não precisa entrar no servidor dele. Ex.: "https://sua-api.onrender.com"
   apiUrl: "",
 
+  // Cor do banner quando você não tem banner no Discord (ou usa o Lanyard).
+  bannerColor: "#5865f2",
+
   name: "Seu Nome",
   bio: "Escreva aqui algo sobre você.",
   timezone: "America/Sao_Paulo",

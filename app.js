@@ -79,17 +79,32 @@ function connect() {
   ws.onclose = () => { clearInterval(hb); setTimeout(connect, 5000); };
 }
 
-fetch(`https://api.lanyard.rest/v1/users/${C.discordId}`)
-  .then((r) => r.json())
-  .then((j) => {
-    if (!j.success) throw new Error(j.error?.message);
-    render(j.data);
-    connect();
-  })
-  .catch(() => {
-    $("display").textContent = C.name;
-    $("username").textContent = "Configure seu discordId em config.js e entre no servidor do Lanyard";
-  });
+const fail = () => {
+  $("display").textContent = C.name;
+  $("username").textContent = C.apiUrl
+    ? "API indisponível no momento"
+    : "Configure seu discordId em config.js e entre no servidor do Lanyard";
+};
+
+if (C.apiUrl) {
+  // API própria (pasta server/): consulta a cada 10s
+  const poll = () =>
+    fetch(`${C.apiUrl.replace(/\/$/, "")}/api/profile`)
+      .then((r) => r.json())
+      .then((j) => { if (!j.success) throw new Error(); render(j.data); })
+      .catch(fail);
+  poll();
+  setInterval(poll, 10000);
+} else {
+  fetch(`https://api.lanyard.rest/v1/users/${C.discordId}`)
+    .then((r) => r.json())
+    .then((j) => {
+      if (!j.success) throw new Error(j.error?.message);
+      render(j.data);
+      connect();
+    })
+    .catch(fail);
+}
 
 // ---------- GitHub ----------
 if (C.githubUser) {

@@ -5,6 +5,10 @@ window.CONFIG = {
   // IMPORTANTE: entre no servidor https://discord.gg/lanyard para o status aparecer ao vivo.
   discordId: "000000000000000000",
 
+  // Endereço da sua API própria (pasta server/). Se preencher, o Lanyard não é usado
+  // e você não precisa entrar no servidor dele. Ex.: "https://sua-api.onrender.com"
+  apiUrl: "",
+
   name: "Seu Nome",
   bio: "Escreva aqui algo sobre você.",
   timezone: "America/Sao_Paulo",

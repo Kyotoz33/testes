@@ -74,7 +74,6 @@ h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--
 .bar { height: 4px; background: var(--line); border-radius: 2px; margin-top: 6px; overflow: hidden; }
 .bar i { display: block; height: 100%; width: 0; background: var(--muted); }
 
-.links, .repos { display: grid; gap: 2px; }
-.links a, .repos a { display: block; padding: 6px 8px; margin: 0 -8px; border-radius: 4px; }
-.links a:hover, .repos a:hover { background: var(--card); }
-.repos small { display: block; color: var(--muted); font-size: 12px; }
+.links { display: grid; gap: 2px; }
+.links a { display: block; padding: 6px 8px; margin: 0 -8px; border-radius: 4px; }
+.links a:hover { background: var(--card); }

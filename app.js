@@ -127,17 +127,3 @@ if (C.apiUrl) {
     })
     .catch(fail);
 }
-
-// ---------- GitHub ----------
-if (C.githubUser) {
-  fetch(`https://api.github.com/users/${C.githubUser}/repos?sort=updated&per_page=6`)
-    .then((r) => r.json())
-    .then((repos) => {
-      if (!Array.isArray(repos) || !repos.length) return;
-      $("repos").innerHTML = repos.filter((r) => !r.fork).map((r) =>
-        `<a href="${esc(r.html_url)}" target="_blank" rel="noopener"><b>${esc(r.name)}</b>
-         <small>${esc(r.description || "Sem descrição")} · ⭐ ${r.stargazers_count} ${r.language ? "· " + esc(r.language) : ""}</small></a>`).join("");
-      $("gh-card").hidden = false;
-    })
-    .catch(() => {});
-}

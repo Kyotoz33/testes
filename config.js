@@ -15,7 +15,6 @@ window.CONFIG = {
   name: "Seu Nome",
   bio: "Escreva aqui algo sobre você.",
   timezone: "America/Sao_Paulo",
-  githubUser: "kyotoz33", // deixe "" para esconder a seção do GitHub
 
   links: [
     { label: "GitHub", url: "https://github.com/kyotoz33", icon: "🐙" },

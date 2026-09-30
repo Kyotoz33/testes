@@ -1,0 +1,6 @@
+# Troque pelo seu endereço. Sem domínio? Veja server/README.md (sslip.io ou DuckDNS, grátis).
+# Exemplo: 203-0-113-5.sslip.io  (troque pelo IP da sua VPS, com traços)
+SEU-ENDERECO-AQUI {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+}

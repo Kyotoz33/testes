@@ -149,10 +149,12 @@ function renderAll(list) {
 }
 
 // ---------- fontes de dados ----------
+// apiUrl "/" = API no mesmo servidor do site (VPS); vazio = só o perfil do config.js via Lanyard
+const USE_API = !!C.apiUrl;
 const API = (C.apiUrl || "").replace(/\/$/, "");
 
 async function fetchProfiles() {
-  if (API) {
+  if (USE_API) {
     const j = await (await fetch(`${API}/api/profiles`)).json();
     if (!j.success) throw new Error();
     return j.data;

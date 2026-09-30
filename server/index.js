@@ -2,12 +2,13 @@ import express from "express";
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { Client, GatewayIntentBits } from "discord.js";
 
 const {
   DISCORD_TOKEN, GUILD_ID, USER_ID, ADMIN_PASSWORD,
   SESSION_SECRET = crypto.randomBytes(32).toString("hex"), // sem valor fixo, o login expira a cada reinício
-  ALLOWED_ORIGIN = "*", PORT = 3000, DATA_FILE = "./data/profiles.json", STOCK_FILE = "./data/stock.json",
+  ALLOWED_ORIGIN = "*", PORT = 3000, HOST = "0.0.0.0", DATA_FILE = "./data/profiles.json", STOCK_FILE = "./data/stock.json",
 } = process.env;
 
 if (!ADMIN_PASSWORD) {
@@ -179,7 +180,15 @@ app.use((req, res, next) => {
 
 const fail = (res, code, message) => res.status(code).json({ success: false, error: { message } });
 
-app.get("/", (_, res) => res.send("API de perfis online."));
+// serve o site pelo próprio servidor (mesma origem: sem CORS e sem domínio à parte).
+// Lista fixa de arquivos: nada de server/ (.env, dados) fica exposto.
+const SITE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const SITE_FILES = new Set(["index.html", "admin.html", "app.js", "admin.js", "bg.js", "config.js", "style.css", "admin.css"]);
+app.get("/:file?", (req, res, next) => {
+  const f = req.params.file || "index.html";
+  if (!SITE_FILES.has(f)) return next();
+  res.sendFile(path.join(SITE, f));
+});
 
 app.post("/api/login", (req, res) => {
   const f = fails.get(req.ip);
@@ -276,4 +285,4 @@ app.use((err, _req, res, _next) => {
 });
 
 await load();
-app.listen(PORT, () => console.log(`API em http://localhost:${PORT}`));
+app.listen(PORT, HOST, () => console.log(`Site e API em http://${HOST}:${PORT}`));

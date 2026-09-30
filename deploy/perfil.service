@@ -1,0 +1,20 @@
+[Unit]
+Description=Site de perfis + API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=perfil
+WorkingDirectory=/opt/perfil/server
+EnvironmentFile=/opt/perfil/server/.env
+# atrás do Caddy: só aceita conexões locais
+Environment=HOST=127.0.0.1
+ExecStart=/usr/bin/node index.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/perfil/server/data
+
+[Install]
+WantedBy=multi-user.target

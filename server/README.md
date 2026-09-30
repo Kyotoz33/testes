@@ -45,3 +45,40 @@ Nunca coloque o token nem a senha no repositório.
   (dá para copiar de novo, "Desfazer" ou excluir).
 - Em teste sem HTTPS o navegador pode bloquear a cópia direta; o painel usa um plano B automático.
   Na VPS, use HTTPS (Caddy/Nginx + certificado) para proteger a senha e os códigos em trânsito.
+
+## Colocar tudo na VPS (sem comprar domínio)
+O servidor entrega o site **e** a API no mesmo endereço (`apiUrl: "/"` no `config.js`, já é o padrão).
+Não precisa de Netlify.
+
+**Endereço grátis com HTTPS** (o HTTPS protege a senha e os códigos):
+- **sslip.io**, sem cadastro: se o IP da VPS é `203.0.113.5`, o endereço é `203-0-113-5.sslip.io`.
+  Funciona na hora, mas os certificados de todo mundo que usa o sslip.io dividem um limite do Let's Encrypt;
+  se falhar, use o DuckDNS.
+- **DuckDNS** (https://www.duckdns.org): crie `seunome.duckdns.org` apontando para o IP. Grátis e estável.
+- Sem HTTPS (só para testar): `http://IP:3000`. A senha trafega sem criptografia.
+
+**Passo a passo** (Debian/Ubuntu, Node 20 ou mais novo):
+```bash
+sudo apt install -y git caddy          # Node 20+: https://nodejs.org (ou NodeSource)
+sudo useradd -r -m -s /usr/sbin/nologin perfil
+# se o repositório for privado, use um token do GitHub ou envie a pasta com scp
+sudo git clone -b claude/vibrant-dirac-hz7wlg https://github.com/Kyotoz33/testes /opt/perfil
+cd /opt/perfil/server
+sudo npm install --omit=dev
+sudo cp .env.example .env && sudo nano .env      # ADMIN_PASSWORD, SESSION_SECRET, DISCORD_TOKEN, GUILD_ID
+sudo chmod 600 .env
+sudo mkdir -p data && sudo chown -R perfil:perfil data
+
+sudo cp /opt/perfil/deploy/perfil.service /etc/systemd/system/
+sudo systemctl enable --now perfil
+sudo journalctl -u perfil -f                     # deve mostrar "Bot online"
+
+# HTTPS automático: edite /etc/caddy/Caddyfile com o conteúdo de deploy/Caddyfile
+# (troque SEU-ENDERECO-AQUI pelo endereço) e recarregue:
+sudo systemctl reload caddy
+sudo ufw allow 80,443/tcp                         # se usar firewall (não abra a 3000)
+```
+Acesse `https://SEU-ENDERECO/` (site) e `https://SEU-ENDERECO/admin.html` (painel).
+
+**Atualizar depois:** `cd /opt/perfil && sudo git pull && sudo systemctl restart perfil`.
+**Backup:** copie `/opt/perfil/server/data/` (perfis e estoque).

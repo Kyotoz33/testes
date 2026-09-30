@@ -1,3 +1,4 @@
+const USE_API = !!window.CONFIG.apiUrl;
 const API = (window.CONFIG.apiUrl || "").replace(/\/$/, "");
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -213,7 +214,7 @@ $("stock-form").onsubmit = async (e) => {
 
 try { $("tzs").innerHTML = Intl.supportedValuesOf("timeZone").map((z) => `<option value="${z}">`).join(""); } catch {}
 
-if (!API) {
+if (!USE_API) {
   msg("Defina apiUrl no config.js (endereço da API do servidor) para usar o painel.");
 } else if (token) {
   show().catch(() => logout());

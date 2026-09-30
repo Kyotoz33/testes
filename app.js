@@ -10,23 +10,6 @@ $("theme").onclick = () => {
   try { localStorage.setItem("theme", root.dataset.theme); } catch {}
 };
 
-// ---------- conteúdo estático ----------
-if (C.bannerColor) root.style.setProperty("--banner", C.bannerColor);
-document.title = `${C.name} — Perfil`;
-$("bio").textContent = C.bio;
-// ícones da Simple Icons (https://simpleicons.org): use o nome do site em "icon"
-$("links").innerHTML = C.links.map((l) =>
-  `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}" data-label="${esc(l.label)}">` +
-  `<img src="https://cdn.simpleicons.org/${esc(l.icon)}/white" alt="${esc(l.label)}"></a>`).join("");
-$("links").querySelectorAll("img").forEach((img) => {
-  img.onerror = () => img.replaceWith(img.parentElement.dataset.label); // sem ícone: mostra o nome
-});
-$("tz").textContent = `(${C.timezone})`;
-setInterval(() => {
-  $("clock").textContent = new Date().toLocaleTimeString("pt-BR", { timeZone: C.timezone });
-}, 1000);
-
-// ---------- Discord via Lanyard ----------
 // [bit da flag, nome, hash do ícone oficial em cdn.discordapp.com/badge-icons/<hash>.png]
 const FLAGS = [
   [1 << 0, "Staff do Discord", "5e74e9b61934fc1f67c65515d1f7e60d"],
@@ -42,93 +25,167 @@ const FLAGS = [
   [1 << 22, "Desenvolvedor Ativo", "6bdc42827a38498929a4920da12695d9"],
 ];
 
-function render(d) {
-  const u = d.discord_user;
-  $("display").textContent = u.global_name || u.username;
-  $("username").textContent = "@" + u.username;
-  $("avatar").src = u.avatar
-    ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
-    : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
-  // banner: só vem da API própria; senão usa a cor de bannerColor
-  if (u.banner) $("banner").style.backgroundImage = `url(https://cdn.discordapp.com/banners/${u.id}/${u.banner}.${u.banner.startsWith("a_") ? "gif" : "png"}?size=600)`;
-  $("dot").className = "dot " + d.discord_status;
-  $("dot").title = d.discord_status;
-  $("badges").innerHTML = FLAGS.filter(([b]) => u.public_flags & b).map(([, n, h]) =>
-    `<img class="badge-icon" src="https://cdn.discordapp.com/badge-icons/${h}.png" alt="${n}" title="${n}" data-name="${n}">`).join("");
-  // se a imagem falhar, mostra o nome em texto
-  $("badges").querySelectorAll("img").forEach((img) => {
-    img.onerror = () => {
-      const s = document.createElement("span");
-      s.className = "badge";
-      s.textContent = img.dataset.name;
-      img.replaceWith(s);
-    };
-  });
+const TEMPLATE = `
+  <div class="banner"></div>
+  <header class="head">
+    <div class="avatar-box"><img class="avatar" alt="" src=""><span class="dot offline"></span></div>
+    <div class="badges"></div>
+  </header>
+  <div class="body">
+    <h1 class="display"></h1>
+    <p class="username"></p>
+    <p class="custom"></p>
+    <div class="panel">
+      <section class="s-bio"><h2>Sobre mim</h2><p class="bio"></p></section>
+      <section class="s-acts" hidden><h2>Atividade</h2><div class="acts"></div></section>
+      <section><h2>Hora local</h2><p><span class="clock">--:--:--</span> <span class="tz muted"></span></p></section>
+      <section class="s-links"><h2>Conexões</h2><div class="links"></div></section>
+    </div>
+  </div>`;
 
-  const custom = d.activities.find((a) => a.type === 4);
-  $("custom").textContent = custom ? `${custom.emoji?.name || ""} ${custom.state || ""}`.trim() : "";
+const grid = $("grid");
+const cards = new Map(); // id do perfil -> elemento
+
+// imagem que falha (ícone/emblema) vira texto
+grid.addEventListener("error", (e) => {
+  const img = e.target;
+  if (img.tagName !== "IMG" || img.dataset.fallback === undefined) return;
+  const s = document.createElement("span");
+  s.className = img.dataset.cls || "";
+  s.textContent = img.dataset.fallback;
+  img.replaceWith(s);
+}, true);
+
+// só mexe no DOM quando o conteúdo mudou (evita piscar as imagens a cada atualização)
+function setHTML(node, html) {
+  if (node._h === html) return;
+  node._h = html;
+  node.innerHTML = html;
+}
+const setText = (node, t) => { if (node.textContent !== t) node.textContent = t; };
+
+function update(el, p) {
+  const q = (s) => el.querySelector(s);
+  const d = p.discord;
+  const u = d?.discord_user;
+
+  setText(q(".display"), p.name || u?.global_name || u?.username || "Perfil");
+  setText(q(".username"), u ? "@" + u.username : "");
+
+  const avatar = u?.avatar
+    ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
+    : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(p.discordId) >> 22n) % 6n)}.png`;
+  if (q(".avatar").getAttribute("src") !== avatar) q(".avatar").src = avatar;
+
+  // banner do Discord (só na API própria); senão a cor escolhida no painel
+  const bn = q(".banner");
+  bn.style.setProperty("--banner", p.bannerColor || "#5865f2");
+  const bannerImg = u?.banner
+    ? `url(https://cdn.discordapp.com/banners/${u.id}/${u.banner}.${u.banner.startsWith("a_") ? "gif" : "png"}?size=600)` : "";
+  if (bn._img !== bannerImg) { bn._img = bannerImg; bn.style.backgroundImage = bannerImg; }
+
+  const status = d?.discord_status || "offline";
+  q(".dot").className = "dot " + status;
+  q(".dot").title = status;
+
+  setHTML(q(".badges"), FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) =>
+    `<img class="badge-icon" src="https://cdn.discordapp.com/badge-icons/${h}.png" alt="${n}" title="${n}" data-fallback="${n}" data-cls="badge">`).join(""));
+
+  const custom = d?.activities.find((a) => a.type === 4);
+  setText(q(".custom"), custom ? `${custom.emoji?.name || ""} ${custom.state || ""}`.trim() : "");
 
   const rows = [];
-  if (d.listening_to_spotify && d.spotify) {
+  if (d?.listening_to_spotify && d.spotify) {
     const s = d.spotify;
     rows.push(`<div class="act"><img src="${esc(s.album_art_url)}" alt="">
       <div><small>Ouvindo Spotify</small><b>${esc(s.song)}</b><span>${esc(s.artist)}</span>
-      <div class="bar"><i id="sp-bar" data-s="${s.timestamps.start}" data-e="${s.timestamps.end}"></i></div></div></div>`);
+      <div class="bar"><i class="sp-bar" data-s="${s.timestamps.start}" data-e="${s.timestamps.end}"></i></div></div></div>`);
   }
-  for (const a of d.activities.filter((a) => a.type !== 4 && a.name !== "Spotify")) {
+  for (const a of (d?.activities ?? []).filter((a) => a.type !== 4 && a.name !== "Spotify")) {
     const img = a.assets?.large_image && a.application_id && !a.assets.large_image.includes(":")
       ? `https://cdn.discordapp.com/app-assets/${a.application_id}/${a.assets.large_image}.png` : "";
     rows.push(`<div class="act">${img ? `<img src="${img}" alt="">` : `<div class="ph">🎮</div>`}
       <div><small>${a.type === 0 ? "Jogando" : a.type === 1 ? "Transmitindo" : a.type === 3 ? "Assistindo" : "Atividade"}</small>
       <b>${esc(a.name)}</b>${a.details ? `<span>${esc(a.details)}</span>` : ""}${a.state ? `<span>${esc(a.state)}</span>` : ""}</div></div>`);
   }
-  $("activities").innerHTML = rows.join("");
-  $("activities-card").hidden = !rows.length;
+  setHTML(q(".acts"), rows.join(""));
+  q(".s-acts").hidden = !rows.length;
+
+  setText(q(".bio"), p.bio || "");
+  q(".s-bio").hidden = !p.bio;
+  el._tz = p.timezone || "America/Sao_Paulo";
+  setText(q(".tz"), `(${el._tz})`);
+
+  // ícones da Simple Icons (https://simpleicons.org): "icon" é o nome do site
+  setHTML(q(".links"), (p.links || []).map((l) =>
+    `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}">` +
+    (l.icon
+      ? `<img src="https://cdn.simpleicons.org/${esc(l.icon)}/white" alt="${esc(l.label)}" data-fallback="${esc(l.label)}">`
+      : esc(l.label)) + `</a>`).join(""));
+  q(".s-links").hidden = !(p.links || []).length;
 }
 
+function renderAll(list) {
+  if (!list.length) {
+    cards.forEach((el) => el.remove());
+    cards.clear();
+    grid.innerHTML = `<p class="empty muted">Nenhum perfil ainda. Adicione em <a href="admin.html"><u>admin.html</u></a>.</p>`;
+    return;
+  }
+  grid.querySelector(".empty")?.remove();
+  const ids = new Set(list.map((p) => p.id));
+  for (const [id, el] of cards) if (!ids.has(id)) { el.remove(); cards.delete(id); }
+  list.forEach((p, i) => {
+    let el = cards.get(p.id);
+    if (!el) {
+      el = document.createElement("article");
+      el.className = "profile";
+      el.innerHTML = TEMPLATE;
+      cards.set(p.id, el);
+    }
+    update(el, p);
+    if (grid.children[i] !== el) grid.insertBefore(el, grid.children[i] || null);
+  });
+}
+
+// ---------- fontes de dados ----------
+const API = (C.apiUrl || "").replace(/\/$/, "");
+
+async function fetchProfiles() {
+  if (API) {
+    const j = await (await fetch(`${API}/api/profiles`)).json();
+    if (!j.success) throw new Error();
+    return j.data;
+  }
+  // sem API própria: um único perfil do config.js, com status via Lanyard
+  const p = { id: "main", ...C };
+  try {
+    const j = await (await fetch(`https://api.lanyard.rest/v1/users/${C.discordId}`)).json();
+    p.discord = j.success ? j.data : null;
+  } catch { p.discord = null; }
+  return [p];
+}
+
+let loaded = false;
+async function refresh() {
+  try {
+    renderAll(await fetchProfiles());
+    loaded = true;
+  } catch {
+    if (!loaded) grid.innerHTML = `<p class="empty muted">API indisponível no momento.</p>`;
+  }
+}
+refresh();
+setInterval(refresh, 10000);
+
+// ---------- relógios e barras do Spotify ----------
 setInterval(() => {
-  const el = $("sp-bar");
-  if (!el) return;
-  const s = +el.dataset.s, e = +el.dataset.e;
-  el.style.width = Math.min(100, Math.max(0, ((Date.now() - s) / (e - s)) * 100)) + "%";
+  for (const el of cards.values()) {
+    setText(el.querySelector(".clock"), new Date().toLocaleTimeString("pt-BR", { timeZone: el._tz }));
+    const bar = el.querySelector(".sp-bar");
+    if (bar) {
+      const s = +bar.dataset.s, e = +bar.dataset.e;
+      bar.style.width = Math.min(100, Math.max(0, ((Date.now() - s) / (e - s)) * 100)) + "%";
+    }
+  }
 }, 500);
-
-function connect() {
-  const ws = new WebSocket("wss://api.lanyard.rest/socket");
-  let hb;
-  ws.onmessage = (m) => {
-    const { op, d, t } = JSON.parse(m.data);
-    if (op === 1) {
-      ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: C.discordId } }));
-      hb = setInterval(() => ws.send(JSON.stringify({ op: 3 })), d.heartbeat_interval);
-    } else if (op === 0) render(d);
-  };
-  ws.onclose = () => { clearInterval(hb); setTimeout(connect, 5000); };
-}
-
-const fail = () => {
-  $("display").textContent = C.name;
-  $("username").textContent = C.apiUrl
-    ? "API indisponível no momento"
-    : "Configure seu discordId em config.js e entre no servidor do Lanyard";
-};
-
-if (C.apiUrl) {
-  // API própria (pasta server/): consulta a cada 10s
-  const poll = () =>
-    fetch(`${C.apiUrl.replace(/\/$/, "")}/api/profile`)
-      .then((r) => r.json())
-      .then((j) => { if (!j.success) throw new Error(); render(j.data); })
-      .catch(fail);
-  poll();
-  setInterval(poll, 10000);
-} else {
-  fetch(`https://api.lanyard.rest/v1/users/${C.discordId}`)
-    .then((r) => r.json())
-    .then((j) => {
-      if (!j.success) throw new Error(j.error?.message);
-      render(j.data);
-      connect();
-    })
-    .catch(fail);
-}

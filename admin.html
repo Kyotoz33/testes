@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Painel</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body class="admin">
+  <main class="box">
+    <p id="msg" class="msg" hidden></p>
+
+    <form id="login" class="card-form" hidden>
+      <h1>Painel</h1>
+      <label>Senha<input id="password" type="password" autocomplete="current-password" required></label>
+      <button class="btn primary">Entrar</button>
+    </form>
+
+    <section id="panel" hidden>
+      <div class="bar-top">
+        <h1>Perfis</h1>
+        <span>
+          <a class="btn" href="index.html">Ver site</a>
+          <button id="logout" class="btn">Sair</button>
+        </span>
+      </div>
+      <div id="list" class="list"></div>
+      <button id="add" class="btn primary">Adicionar perfil</button>
+
+      <form id="form" class="card-form" hidden>
+        <h2 id="form-title">Novo perfil</h2>
+        <label>ID do Discord
+          <input id="f-discord" inputmode="numeric" placeholder="248592001631518740" required>
+          <small>Precisa estar no mesmo servidor do bot para o status aparecer.</small>
+        </label>
+        <label>Nome <small>(opcional — se vazio, usa o nome do Discord)</small><input id="f-name" maxlength="40"></label>
+        <label>Sobre mim<textarea id="f-bio" maxlength="300" rows="3"></textarea></label>
+        <div class="row2">
+          <label>Fuso horário<input id="f-tz" list="tzs" placeholder="America/Sao_Paulo"></label>
+          <label>Cor do banner<input id="f-color" type="color" value="#5865f2"></label>
+        </div>
+        <datalist id="tzs"></datalist>
+        <datalist id="icons">
+          <option value="github"><option value="discord"><option value="x"><option value="youtube">
+          <option value="instagram"><option value="twitch"><option value="spotify"><option value="tiktok">
+          <option value="steam"><option value="telegram"><option value="whatsapp"><option value="linkedin">
+          <option value="reddit"><option value="facebook">
+        </datalist>
+        <fieldset>
+          <legend>Conexões <small>(ícone = nome do site em simpleicons.org)</small></legend>
+          <div id="f-links"></div>
+          <button type="button" id="add-link" class="btn">+ Conexão</button>
+        </fieldset>
+        <div class="actions">
+          <button class="btn primary">Salvar</button>
+          <button type="button" id="cancel" class="btn">Cancelar</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

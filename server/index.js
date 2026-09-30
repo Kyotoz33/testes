@@ -1,17 +1,30 @@
 import express from "express";
+import crypto from "node:crypto";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { Client, GatewayIntentBits } from "discord.js";
 
-const { DISCORD_TOKEN, GUILD_ID, USER_ID, ALLOWED_ORIGIN = "*", PORT = 3000 } = process.env;
-if (!DISCORD_TOKEN || !GUILD_ID || !USER_ID) {
-  console.error("Defina DISCORD_TOKEN, GUILD_ID e USER_ID (veja .env.example).");
+const {
+  DISCORD_TOKEN, GUILD_ID, USER_ID, ADMIN_PASSWORD,
+  SESSION_SECRET = crypto.randomBytes(32).toString("hex"), // sem valor fixo, o login expira a cada reinício
+  ALLOWED_ORIGIN = "*", PORT = 3000, DATA_FILE = "./data/profiles.json",
+} = process.env;
+
+if (!ADMIN_PASSWORD) {
+  console.error("Defina ADMIN_PASSWORD (senha do painel). Veja .env.example.");
   process.exit(1);
 }
 
+// ---------- Discord ----------
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences],
 });
-client.login(DISCORD_TOKEN);
-client.once("ready", () => console.log(`Bot online como ${client.user.tag}`));
+if (DISCORD_TOKEN && GUILD_ID) {
+  client.login(DISCORD_TOKEN);
+  client.once("ready", () => console.log(`Bot online como ${client.user.tag}`));
+} else {
+  console.warn("DISCORD_TOKEN/GUILD_ID ausentes: rodando sem dados do Discord (só o painel).");
+}
 
 const ms = (d) => (d ? new Date(d).getTime() : undefined);
 
@@ -28,51 +41,184 @@ function mapActivity(a) {
   };
 }
 
-async function getProfile() {
-  const guild = await client.guilds.fetch(GUILD_ID);
-  const member = await guild.members.fetch({ user: USER_ID, force: true, withPresences: true });
-  const user = await client.users.fetch(USER_ID, { force: true });
-  const presence = member.presence;
-  const acts = presence?.activities ?? [];
-  const sp = acts.find((a) => a.name === "Spotify" && a.type === 2);
-
-  return {
-    discord_user: {
-      id: user.id,
-      username: user.username,
-      global_name: user.globalName,
-      avatar: user.avatar,
-      banner: user.banner,
-      public_flags: user.flags?.bitfield ?? 0,
-    },
-    discord_status: presence?.status ?? "offline",
-    activities: acts.map(mapActivity),
-    listening_to_spotify: !!sp,
-    spotify: sp && {
-      song: sp.details,
-      artist: sp.state,
-      album_art_url: sp.assets?.largeImage?.replace("spotify:", "https://i.scdn.co/image/"),
-      timestamps: { start: ms(sp.timestamps?.start), end: ms(sp.timestamps?.end) },
-    },
-  };
+// dados do usuário (avatar, banner, emblemas) mudam pouco: cache de 5 min
+const userCache = new Map();
+async function getUser(id) {
+  const c = userCache.get(id);
+  if (c && Date.now() - c.at < 300000) return c.user;
+  const user = await client.users.fetch(id, { force: true });
+  userCache.set(id, { at: Date.now(), user });
+  return user;
 }
 
-// cache curto para não estourar limites do Discord se o site tiver muitos acessos
-let cache = { at: 0, data: null };
+async function getDiscord(id) {
+  if (!client.isReady()) return null;
+  try {
+    const user = await getUser(id);
+    const guild = await client.guilds.fetch(GUILD_ID);
+    // membros em cache recebem as atualizações de presença pelo gateway
+    const member = guild.members.cache.get(id) ?? (await guild.members.fetch({ user: id, withPresences: true }).catch(() => null));
+    const presence = member?.presence;
+    const acts = presence?.activities ?? [];
+    const sp = acts.find((a) => a.name === "Spotify" && a.type === 2);
+    return {
+      discord_user: {
+        id: user.id, username: user.username, global_name: user.globalName,
+        avatar: user.avatar, banner: user.banner, public_flags: user.flags?.bitfield ?? 0,
+      },
+      discord_status: presence?.status ?? "offline",
+      activities: acts.map(mapActivity),
+      listening_to_spotify: !!sp,
+      spotify: sp && {
+        song: sp.details,
+        artist: sp.state,
+        album_art_url: sp.assets?.largeImage?.replace("spotify:", "https://i.scdn.co/image/"),
+        timestamps: { start: ms(sp.timestamps?.start), end: ms(sp.timestamps?.end) },
+      },
+    };
+  } catch (e) {
+    console.error("Falha ao buscar", id, e.message);
+    return null;
+  }
+}
 
+// ---------- armazenamento (arquivo JSON) ----------
+let profiles = [];
+let writing = Promise.resolve();
+
+async function load() {
+  try {
+    profiles = JSON.parse(await fs.readFile(DATA_FILE, "utf8"));
+  } catch {
+    profiles = USER_ID ? [{ id: crypto.randomUUID(), discordId: USER_ID, name: "", bio: "", timezone: "America/Sao_Paulo", bannerColor: "#5865f2", links: [] }] : [];
+    await save();
+  }
+}
+
+function save() {
+  // escrita atômica, uma de cada vez
+  writing = writing.then(async () => {
+    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
+    const tmp = DATA_FILE + ".tmp";
+    await fs.writeFile(tmp, JSON.stringify(profiles, null, 2));
+    await fs.rename(tmp, DATA_FILE);
+  });
+  return writing;
+}
+
+function validTz(tz) {
+  try { new Intl.DateTimeFormat("pt-BR", { timeZone: tz }); return true; } catch { return false; }
+}
+
+function clean(b) {
+  if (!b || typeof b !== "object") return { error: "Corpo inválido" };
+  const str = (v, max) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+  const discordId = str(b.discordId, 25);
+  if (!/^\d{15,25}$/.test(discordId)) return { error: "ID do Discord inválido (só números)" };
+  const timezone = str(b.timezone, 60) || "America/Sao_Paulo";
+  if (!validTz(timezone)) return { error: "Fuso horário inválido" };
+  const bannerColor = str(b.bannerColor, 7);
+  if (bannerColor && !/^#[0-9a-f]{6}$/i.test(bannerColor)) return { error: "Cor do banner inválida" };
+  const rawLinks = Array.isArray(b.links) ? b.links.slice(0, 8) : [];
+  const links = [];
+  for (const l of rawLinks) {
+    const url = str(l?.url, 300);
+    if (!url) continue;
+    let u;
+    try { u = new URL(url); } catch { return { error: `Link inválido: ${url}` }; }
+    if (!["http:", "https:"].includes(u.protocol)) return { error: `Link inválido: ${url}` };
+    const icon = str(l.icon, 40).toLowerCase();
+    if (icon && !/^[a-z0-9]+$/.test(icon)) return { error: `Ícone inválido: ${icon}` };
+    links.push({ label: str(l.label, 30) || u.hostname, url: u.href, icon });
+  }
+  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, links } };
+}
+
+// ---------- login ----------
+const sign = (exp) => crypto.createHmac("sha256", SESSION_SECRET).update(String(exp)).digest("hex");
+const makeToken = () => { const exp = Date.now() + 12 * 3600 * 1000; return `${exp}.${sign(exp)}`; };
+function validToken(t = "") {
+  const [exp, sig] = t.split(".");
+  if (!exp || !sig || Number(exp) < Date.now()) return false;
+  const a = Buffer.from(sig), b = Buffer.from(sign(exp));
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+const sha = (s) => crypto.createHash("sha256").update(String(s)).digest();
+
+const fails = new Map(); // ip -> { n, until }
+function auth(req, res, next) {
+  if (validToken((req.headers.authorization || "").replace(/^Bearer /, ""))) return next();
+  res.status(401).json({ success: false, error: { message: "Não autorizado" } });
+}
+
+// ---------- API ----------
 const app = express();
-app.use((_, res, next) => {
-  res.set("Access-Control-Allow-Origin", ALLOWED_ORIGIN);
+app.set("trust proxy", 1);
+app.use(express.json({ limit: "50kb" }));
+app.use((req, res, next) => {
+  res.set({
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Methods": "GET,POST,PUT,DELETE,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  });
+  if (req.method === "OPTIONS") return res.sendStatus(204);
   next();
 });
-app.get("/", (_, res) => res.send("API de perfil online. Use /api/profile"));
-app.get("/api/profile", async (_, res) => {
-  try {
-    if (Date.now() - cache.at > 5000) cache = { at: Date.now(), data: await getProfile() };
-    res.json({ success: true, data: cache.data });
-  } catch (e) {
-    console.error(e);
-    res.status(500).json({ success: false, error: { message: "Falha ao buscar perfil" } });
+
+const fail = (res, code, message) => res.status(code).json({ success: false, error: { message } });
+
+app.get("/", (_, res) => res.send("API de perfis online."));
+
+app.post("/api/login", (req, res) => {
+  const f = fails.get(req.ip);
+  if (f && f.n >= 5 && f.until > Date.now()) return fail(res, 429, "Muitas tentativas. Tente de novo em alguns minutos.");
+  if (crypto.timingSafeEqual(sha(req.body?.password ?? ""), sha(ADMIN_PASSWORD))) {
+    fails.delete(req.ip);
+    return res.json({ success: true, token: makeToken() });
   }
+  fails.set(req.ip, { n: (f?.n ?? 0) + 1, until: Date.now() + 10 * 60 * 1000 });
+  fail(res, 401, "Senha incorreta");
 });
+
+app.get("/api/profiles", async (_, res) => {
+  const data = await Promise.all(profiles.map(async (p) => ({ ...p, discord: await getDiscord(p.discordId) })));
+  res.json({ success: true, data });
+});
+
+app.post("/api/profiles", auth, async (req, res) => {
+  const { value, error } = clean(req.body);
+  if (error) return fail(res, 400, error);
+  if (profiles.length >= 24) return fail(res, 400, "Limite de 24 perfis");
+  if (profiles.some((p) => p.discordId === value.discordId)) return fail(res, 409, "Esse ID já está cadastrado");
+  const profile = { id: crypto.randomUUID(), ...value };
+  profiles.push(profile);
+  await save();
+  res.status(201).json({ success: true, data: profile });
+});
+
+app.put("/api/profiles/:id", auth, async (req, res) => {
+  const i = profiles.findIndex((p) => p.id === req.params.id);
+  if (i < 0) return fail(res, 404, "Perfil não encontrado");
+  const { value, error } = clean(req.body);
+  if (error) return fail(res, 400, error);
+  if (profiles.some((p, j) => j !== i && p.discordId === value.discordId)) return fail(res, 409, "Esse ID já está cadastrado");
+  profiles[i] = { id: profiles[i].id, ...value };
+  await save();
+  res.json({ success: true, data: profiles[i] });
+});
+
+app.delete("/api/profiles/:id", auth, async (req, res) => {
+  const i = profiles.findIndex((p) => p.id === req.params.id);
+  if (i < 0) return fail(res, 404, "Perfil não encontrado");
+  profiles.splice(i, 1);
+  await save();
+  res.json({ success: true });
+});
+
+app.use((err, _req, res, _next) => {
+  if (!err.status || err.status >= 500) console.error(err);
+  fail(res, err.status || 500, err.status === 400 ? "JSON inválido" : "Erro interno");
+});
+
+await load();
 app.listen(PORT, () => console.log(`API em http://localhost:${PORT}`));

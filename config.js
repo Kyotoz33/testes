@@ -5,8 +5,10 @@ window.CONFIG = {
   // IMPORTANTE: entre no servidor https://discord.gg/lanyard para o status aparecer ao vivo.
   discordId: "248592001631518740",
 
-  // Endereço da sua API própria (pasta server/). Se preencher, o Lanyard não é usado
-  // e você não precisa entrar no servidor dele. Ex.: "https://sua-api.onrender.com"
+  // Endereço da API do servidor (pasta server/). Com ele, o site mostra TODOS os perfis
+  // cadastrados no painel (admin.html) e o Lanyard não é usado.
+  // Ex.: "https://sua-api.onrender.com"
+  // Se ficar vazio, o site mostra só o perfil abaixo (config.js) via Lanyard.
   apiUrl: "",
 
   // Cor do banner quando você não tem banner no Discord (ou usa o Lanyard).

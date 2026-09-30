@@ -8,7 +8,7 @@
 }
 * { box-sizing: border-box; }
 body {
-  margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 12px;
+  margin: 0; min-height: 100vh; padding: 56px 16px 32px;
   background: var(--page); color: var(--text);
   font: 14px/1.4 "gg sans", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
 }
@@ -22,11 +22,14 @@ a { color: inherit; text-decoration: none; }
 }
 .theme:hover { color: var(--text); }
 
+/* todos os cartões com a mesma largura e altura, centralizados */
+.grid { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: stretch; }
+.empty { width: 100%; text-align: center; }
 .profile {
-  width: 100%; max-width: 400px; background: var(--card);
+  width: min(360px, 100%); display: flex; flex-direction: column; background: var(--card);
   border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px var(--line);
 }
-.banner { height: 110px; background: var(--banner) center / cover no-repeat; }
+.banner { height: 110px; background: var(--banner, #5865f2) center / cover no-repeat; }
 
 .head { position: relative; height: 44px; padding: 0 16px; }
 .avatar-box {
@@ -49,14 +52,14 @@ a { color: inherit; text-decoration: none; }
 .badge-icon { width: 20px; height: 20px; display: block; }
 .badge { font-size: 11px; color: var(--muted); }
 
-.body { padding: 0 16px 16px; }
+.body { padding: 0 16px 16px; flex: 1; display: flex; flex-direction: column; }
 .body h1 { font-size: 20px; font-weight: 700; }
 .username { color: var(--muted); }
 .custom { margin-top: 8px; }
 .custom:empty { display: none; }
 
-.panel { margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--panel); display: grid; gap: 12px; }
-.panel section + section { border-top: 1px solid var(--line); padding-top: 12px; }
+.panel { flex: 1; align-content: start; margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--panel); display: grid; gap: 12px; }
+.panel > section:not([hidden]) ~ section:not([hidden]) { border-top: 1px solid var(--line); padding-top: 12px; }
 .panel [hidden] { display: none; }
 h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text); margin-bottom: 6px; }
 .bio { color: var(--text); }
@@ -80,5 +83,5 @@ h2 { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--
 
 #bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 :root[data-theme="light"] #bg { display: none; }
-.profile, .theme { position: relative; z-index: 1; }
-.theme { position: fixed; }
+.grid { position: relative; z-index: 1; }
+.theme { position: fixed; z-index: 2; }

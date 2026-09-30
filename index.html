@@ -3,52 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Meu Perfil</title>
+  <title>Perfis</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <canvas id="bg" aria-hidden="true"></canvas>
   <button id="theme" class="theme" aria-label="Alternar tema">◐</button>
 
-  <main class="profile">
-    <div class="banner" id="banner"></div>
-
-    <header class="head">
-      <div class="avatar-box">
-        <img id="avatar" alt="Avatar" src="">
-        <span id="dot" class="dot offline" title="offline"></span>
-      </div>
-      <div id="badges" class="badges"></div>
-    </header>
-
-    <div class="body">
-      <h1 id="display">Carregando…</h1>
-      <p id="username" class="username"></p>
-      <p id="custom" class="custom"></p>
-
-      <div class="panel">
-        <section>
-          <h2>Sobre mim</h2>
-          <p id="bio" class="bio"></p>
-        </section>
-
-        <section id="activities-card" hidden>
-          <h2>Atividade</h2>
-          <div id="activities"></div>
-        </section>
-
-        <section>
-          <h2>Hora local</h2>
-          <p><span id="clock">--:--:--</span> <span id="tz" class="muted"></span></p>
-        </section>
-
-        <section>
-          <h2>Conexões</h2>
-          <div id="links" class="links"></div>
-        </section>
-      </div>
-    </div>
-  </main>
+  <main id="grid" class="grid"><p class="empty muted">Carregando…</p></main>
 
   <script src="config.js"></script>
   <script src="app.js"></script>

@@ -23,5 +23,4 @@ window.CONFIG = {
     { label: "YouTube", url: "https://youtube.com/", icon: "youtube" },
   ],
 
-  skills: ["JavaScript", "Python", "Discord Bots", "Design", "Games"],
 };

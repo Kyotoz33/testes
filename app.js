@@ -14,7 +14,6 @@ $("theme").onclick = () => {
 if (C.bannerColor) root.style.setProperty("--banner", C.bannerColor);
 document.title = `${C.name} — Perfil`;
 $("bio").textContent = C.bio;
-$("skills").innerHTML = C.skills.map((s) => `<span>${esc(s)}</span>`).join("");
 // ícones da Simple Icons (https://simpleicons.org): use o nome do site em "icon"
 $("links").innerHTML = C.links.map((l) =>
   `<a href="${esc(l.url)}" target="_blank" rel="noopener" title="${esc(l.label)}" data-label="${esc(l.label)}">` +

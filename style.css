@@ -27,6 +27,7 @@ h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: 
 .who h1 { font-size: 1.6rem; }
 .custom { margin-top: 6px; }
 .badges { width: 100%; display: flex; gap: 6px; flex-wrap: wrap; }
+.badge-icon { width: 24px; height: 24px; }
 .badge { font-size: .75rem; padding: 2px 8px; border-radius: 99px; background: var(--border); }
 
 .act { display: flex; gap: 12px; align-items: center; padding: 8px 0; }

@@ -21,10 +21,19 @@ setInterval(() => {
 }, 1000);
 
 // ---------- Discord via Lanyard ----------
+// [bit da flag, nome, hash do ícone oficial em cdn.discordapp.com/badge-icons/<hash>.png]
 const FLAGS = [
-  [1 << 0, "Staff"], [1 << 1, "Parceiro"], [1 << 2, "HypeSquad Events"], [1 << 3, "Bug Hunter"],
-  [1 << 6, "Bravery"], [1 << 7, "Brilliance"], [1 << 8, "Balance"], [1 << 9, "Early Supporter"],
-  [1 << 14, "Bug Hunter 2"], [1 << 17, "Dev de Bot Verificado"], [1 << 22, "Dev Ativo"],
+  [1 << 0, "Staff do Discord", "5e74e9b61934fc1f67c65515d1f7e60d"],
+  [1 << 1, "Parceiro", "3f9748e53446a137a052f3454e2de41e"],
+  [1 << 2, "HypeSquad Events", "bf01d1073931f921909045f3a39fd264"],
+  [1 << 3, "Bug Hunter", "2717692c7dca7289b35297368a940dd0"],
+  [1 << 6, "HypeSquad Bravery", "8a88d63823d8a71cd5e390baa45efa02"],
+  [1 << 7, "HypeSquad Brilliance", "011940fd013da3f7fb926e4a1cd2e618"],
+  [1 << 8, "HypeSquad Balance", "3aa41de486fa12454c3761e8e223442e"],
+  [1 << 9, "Early Supporter", "7060786766c9c840eb3019e725d2b358"],
+  [1 << 14, "Bug Hunter Nível 2", "848f79194d4be5ff5f81505cbd0ce1e6"],
+  [1 << 17, "Dev de Bot Verificado", "6df5892e0f35b051f8b61eace34f4967"],
+  [1 << 22, "Desenvolvedor Ativo", "6bdc42827a38498929a4920da12695d9"],
 ];
 
 function render(d) {
@@ -36,7 +45,17 @@ function render(d) {
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
   $("dot").className = "dot " + d.discord_status;
   $("dot").title = d.discord_status;
-  $("badges").innerHTML = FLAGS.filter(([b]) => u.public_flags & b).map(([, n]) => `<span class="badge">${n}</span>`).join("");
+  $("badges").innerHTML = FLAGS.filter(([b]) => u.public_flags & b).map(([, n, h]) =>
+    `<img class="badge-icon" src="https://cdn.discordapp.com/badge-icons/${h}.png" alt="${n}" title="${n}" data-name="${n}">`).join("");
+  // se a imagem falhar, mostra o nome em texto
+  $("badges").querySelectorAll("img").forEach((img) => {
+    img.onerror = () => {
+      const s = document.createElement("span");
+      s.className = "badge";
+      s.textContent = img.dataset.name;
+      img.replaceWith(s);
+    };
+  });
 
   const custom = d.activities.find((a) => a.type === 4);
   $("custom").textContent = custom ? `${custom.emoji?.name || ""} ${custom.state || ""}`.trim() : "";

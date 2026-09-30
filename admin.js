@@ -121,8 +121,95 @@ $("form").onsubmit = async (e) => {
 async function show() {
   $("login").hidden = true;
   $("panel").hidden = false;
-  await refresh();
+  await Promise.all([refresh(), refreshStock()]);
 }
+
+// ---------- abas ----------
+document.querySelectorAll(".tab").forEach((b) => {
+  b.onclick = () => {
+    document.querySelectorAll(".tab").forEach((t) => t.classList.toggle("on", t === b));
+    $("tab-profiles").hidden = b.dataset.tab !== "profiles";
+    $("tab-stock").hidden = b.dataset.tab !== "stock";
+    msg("");
+  };
+});
+
+// ---------- estoque de códigos ----------
+let stock = [];
+
+const fmt = (t) => new Date(t).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const mask = (c) => (c.length <= 6 ? "•".repeat(c.length) : c.slice(0, 4) + "•".repeat(Math.min(c.length - 6, 12)) + c.slice(-2));
+
+async function refreshStock() {
+  stock = (await api("/api/stock")).data;
+  renderStock();
+}
+
+function renderStock() {
+  const free = stock.filter((i) => !i.used).length;
+  $("s-count").textContent = `${free} disponíveis · ${stock.length - free} usados`;
+  const f = $("s-filter").value, show = $("s-show").checked;
+  const items = stock.filter((i) => f === "all" || (f === "used" ? i.used : !i.used));
+  $("s-list").innerHTML = items.length ? items.map((i) => `
+    <div class="item ${i.used ? "is-used" : ""}">
+      <div class="info">
+        <b class="code">${esc(show ? i.code : mask(i.code))}</b>
+        <small>${i.used ? `<span class="badge-st used">USADO</span>${fmt(i.usedAt)}` : `<span class="badge-st ok">DISPONÍVEL</span>`}${i.note ? " · " + esc(i.note) : ""}</small>
+      </div>
+      <div class="btns">
+        <button class="btn ${i.used ? "" : "primary"}" data-copy="${i.id}">${i.used ? "Copiar de novo" : "Copiar"}</button>
+        ${i.used ? `<button class="btn" data-unuse="${i.id}" title="Voltar para disponível">Desfazer</button>` : ""}
+        <button class="btn danger" data-sdel="${i.id}">×</button>
+      </div>
+    </div>`).join("") : `<p class="muted">Nada por aqui.</p>`;
+}
+
+// copia para a área de transferência (com plano B para páginas sem HTTPS)
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); return true; } catch {}
+  const ta = document.createElement("textarea");
+  ta.value = t; ta.style.cssText = "position:fixed;opacity:0";
+  document.body.append(ta); ta.select();
+  let ok = false;
+  try { ok = document.execCommand("copy"); } catch {}
+  ta.remove();
+  return ok;
+}
+
+$("s-list").onclick = async (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  const { copy, unuse, sdel } = b.dataset;
+  try {
+    if (copy) {
+      const item = stock.find((i) => i.id === copy);
+      if (!(await copyText(item.code))) return msg("Não consegui copiar. Ative 'Mostrar códigos' e copie na mão.");
+      // só marca como usado depois que a cópia deu certo; o código continua guardado
+      if (!item.used) await api(`/api/stock/${copy}/use`, "POST");
+      msg(item.used ? "Copiado." : "Copiado! Marcado como usado.", true);
+      await refreshStock();
+    } else if (unuse) {
+      await api(`/api/stock/${unuse}/unuse`, "POST");
+      await refreshStock();
+    } else if (sdel && confirm("Excluir este código do estoque de vez?")) {
+      await api(`/api/stock/${sdel}`, "DELETE");
+      await refreshStock();
+    }
+  } catch (err) { msg(err.message); }
+};
+
+$("s-filter").onchange = $("s-show").onchange = renderStock;
+
+$("stock-form").onsubmit = async (e) => {
+  e.preventDefault();
+  msg("");
+  try {
+    const r = await api("/api/stock", "POST", { codes: $("s-codes").value, note: $("s-note").value });
+    $("s-codes").value = "";
+    msg(`${r.added} código(s) guardado(s)` + (r.duplicates ? `, ${r.duplicates} repetido(s) ignorado(s).` : "."), true);
+    await refreshStock();
+  } catch (err) { msg(err.message); }
+};
 
 try { $("tzs").innerHTML = Intl.supportedValuesOf("timeZone").map((z) => `<option value="${z}">`).join(""); } catch {}
 

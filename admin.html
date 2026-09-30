@@ -20,12 +20,18 @@
 
     <section id="panel" hidden>
       <div class="bar-top">
-        <h1>Perfis</h1>
+        <h1>Painel</h1>
         <span>
           <a class="btn" href="index.html">Ver site</a>
           <button id="logout" class="btn">Sair</button>
         </span>
       </div>
+      <nav class="tabs">
+        <button type="button" class="tab on" data-tab="profiles">Perfis</button>
+        <button type="button" class="tab" data-tab="stock">Estoque</button>
+      </nav>
+
+      <div id="tab-profiles">
       <div id="list" class="list"></div>
       <button id="add" class="btn primary">Adicionar perfil</button>
 
@@ -58,6 +64,31 @@
           <button type="button" id="cancel" class="btn">Cancelar</button>
         </div>
       </form>
+      </div>
+
+      <div id="tab-stock" hidden>
+        <form id="stock-form" class="card-form">
+          <h2>Adicionar códigos</h2>
+          <label>Códigos <small>(um por linha)</small>
+            <textarea id="s-codes" rows="4" spellcheck="false" placeholder="XXXX-XXXX-XXXX&#10;YYYY-YYYY-YYYY"></textarea>
+          </label>
+          <label>Observação <small>(opcional, ex.: 800 Robux)</small><input id="s-note" maxlength="60"></label>
+          <div class="actions"><button class="btn primary">Guardar no estoque</button></div>
+        </form>
+
+        <div class="stock-bar">
+          <span id="s-count" class="muted"></span>
+          <span class="stock-tools">
+            <label class="chk"><input id="s-show" type="checkbox"> Mostrar códigos</label>
+            <select id="s-filter">
+              <option value="avail">Disponíveis</option>
+              <option value="used">Usados</option>
+              <option value="all">Todos</option>
+            </select>
+          </span>
+        </div>
+        <div id="s-list" class="list"></div>
+      </div>
     </section>
   </main>
 

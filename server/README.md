@@ -37,3 +37,11 @@ Nunca coloque o token nem a senha no repositório.
 - Login com senha, token assinado que expira em 12 h, bloqueio após 5 tentativas erradas.
 - Só links `http/https` são aceitos; textos são escapados no site.
 - Leitura de perfis é pública; criar/editar/excluir exige login.
+
+## Estoque de códigos (aba "Estoque" do painel)
+- Guardado em `STOCK_FILE` (padrão `./data/stock.json`, use disco persistente e faça backup).
+- Só acessível com login; **nunca** aparece na API pública.
+- "Copiar" coloca o código na área de transferência e o marca como **usado**. Ele continua guardado
+  (dá para copiar de novo, "Desfazer" ou excluir).
+- Em teste sem HTTPS o navegador pode bloquear a cópia direta; o painel usa um plano B automático.
+  Na VPS, use HTTPS (Caddy/Nginx + certificado) para proteger a senha e os códigos em trânsito.

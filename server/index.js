@@ -7,7 +7,7 @@ import { Client, GatewayIntentBits } from "discord.js";
 const {
   DISCORD_TOKEN, GUILD_ID, USER_ID, ADMIN_PASSWORD,
   SESSION_SECRET = crypto.randomBytes(32).toString("hex"), // sem valor fixo, o login expira a cada reinício
-  ALLOWED_ORIGIN = "*", PORT = 3000, DATA_FILE = "./data/profiles.json",
+  ALLOWED_ORIGIN = "*", PORT = 3000, DATA_FILE = "./data/profiles.json", STOCK_FILE = "./data/stock.json",
 } = process.env;
 
 if (!ADMIN_PASSWORD) {
@@ -82,9 +82,27 @@ async function getDiscord(id) {
   }
 }
 
-// ---------- armazenamento (arquivo JSON) ----------
+// ---------- armazenamento (arquivos JSON) ----------
+// escrita atômica (arquivo temporário + rename), uma de cada vez por arquivo
+function makeWriter(file) {
+  let chain = Promise.resolve();
+  return (data) => {
+    chain = chain.then(async () => {
+      await fs.mkdir(path.dirname(file), { recursive: true });
+      const tmp = file + ".tmp";
+      await fs.writeFile(tmp, JSON.stringify(data, null, 2));
+      await fs.rename(tmp, file);
+    });
+    return chain;
+  };
+}
+const writeProfiles = makeWriter(DATA_FILE);
+const writeStock = makeWriter(STOCK_FILE);
+
 let profiles = [];
-let writing = Promise.resolve();
+let stock = [];
+const save = () => writeProfiles(profiles);
+const saveStock = () => writeStock(stock);
 
 async function load() {
   try {
@@ -93,17 +111,11 @@ async function load() {
     profiles = USER_ID ? [{ id: crypto.randomUUID(), discordId: USER_ID, name: "", bio: "", timezone: "America/Sao_Paulo", bannerColor: "#5865f2", links: [] }] : [];
     await save();
   }
-}
-
-function save() {
-  // escrita atômica, uma de cada vez
-  writing = writing.then(async () => {
-    await fs.mkdir(path.dirname(DATA_FILE), { recursive: true });
-    const tmp = DATA_FILE + ".tmp";
-    await fs.writeFile(tmp, JSON.stringify(profiles, null, 2));
-    await fs.rename(tmp, DATA_FILE);
-  });
-  return writing;
+  try {
+    stock = JSON.parse(await fs.readFile(STOCK_FILE, "utf8"));
+  } catch {
+    stock = [];
+  }
 }
 
 function validTz(tz) {
@@ -212,6 +224,49 @@ app.delete("/api/profiles/:id", auth, async (req, res) => {
   if (i < 0) return fail(res, 404, "Perfil não encontrado");
   profiles.splice(i, 1);
   await save();
+  res.json({ success: true });
+});
+
+// ---------- estoque de códigos (só com login) ----------
+app.get("/api/stock", auth, (_, res) => res.json({ success: true, data: stock }));
+
+app.post("/api/stock", auth, async (req, res) => {
+  const note = typeof req.body?.note === "string" ? req.body.note.trim().slice(0, 60) : "";
+  const raw = Array.isArray(req.body?.codes) ? req.body.codes : String(req.body?.codes ?? "").split(/\r?\n/);
+  const codes = [...new Set(raw.map((c) => String(c).trim()).filter(Boolean))];
+  if (!codes.length) return fail(res, 400, "Cole ao menos um código");
+  if (codes.length > 200) return fail(res, 400, "Máximo de 200 códigos por vez");
+  if (codes.some((c) => c.length > 200)) return fail(res, 400, "Código muito longo");
+  const have = new Set(stock.map((i) => i.code));
+  const fresh = codes.filter((c) => !have.has(c));
+  if (stock.length + fresh.length > 5000) return fail(res, 400, "Limite de 5000 códigos");
+  const now = Date.now();
+  stock.push(...fresh.map((code) => ({ id: crypto.randomUUID(), code, note, used: false, usedAt: null, createdAt: now })));
+  await saveStock();
+  res.status(201).json({ success: true, added: fresh.length, duplicates: codes.length - fresh.length });
+});
+
+// marca como usado (mantém guardado); idempotente: não muda a data se já estava usado
+app.post("/api/stock/:id/use", auth, async (req, res) => {
+  const item = stock.find((i) => i.id === req.params.id);
+  if (!item) return fail(res, 404, "Código não encontrado");
+  if (!item.used) { item.used = true; item.usedAt = Date.now(); await saveStock(); }
+  res.json({ success: true, data: item });
+});
+
+app.post("/api/stock/:id/unuse", auth, async (req, res) => {
+  const item = stock.find((i) => i.id === req.params.id);
+  if (!item) return fail(res, 404, "Código não encontrado");
+  item.used = false; item.usedAt = null;
+  await saveStock();
+  res.json({ success: true, data: item });
+});
+
+app.delete("/api/stock/:id", auth, async (req, res) => {
+  const i = stock.findIndex((x) => x.id === req.params.id);
+  if (i < 0) return fail(res, 404, "Código não encontrado");
+  stock.splice(i, 1);
+  await saveStock();
   res.json({ success: true });
 });
 

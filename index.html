@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meu Perfil</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <button id="theme" class="theme" aria-label="Alternar tema">🌓</button>
+
+  <main class="wrap">
+    <section class="card profile" id="profile">
+      <div class="avatar-box">
+        <img id="avatar" alt="Avatar" src="">
+        <span id="dot" class="dot offline" title="offline"></span>
+      </div>
+      <div class="who">
+        <h1 id="display">Carregando…</h1>
+        <p id="username" class="muted"></p>
+        <p id="custom" class="custom"></p>
+      </div>
+      <div id="badges" class="badges"></div>
+    </section>
+
+    <section class="card" id="activities-card" hidden>
+      <h2>Agora</h2>
+      <div id="activities"></div>
+    </section>
+
+    <section class="card">
+      <h2>Sobre</h2>
+      <p id="bio"></p>
+      <div id="skills" class="chips"></div>
+      <p class="muted">🕒 Hora local: <b id="clock">--:--:--</b> <span id="tz"></span></p>
+    </section>
+
+    <section class="card">
+      <h2>Links</h2>
+      <div id="links" class="links"></div>
+    </section>
+
+    <section class="card" id="gh-card" hidden>
+      <h2>Projetos no GitHub</h2>
+      <div id="repos" class="repos"></div>
+    </section>
+
+    <footer class="muted">Feito com ❤️ · status via <a href="https://github.com/Phineas/lanyard">Lanyard</a></footer>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

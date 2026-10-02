@@ -106,12 +106,14 @@ function cleanPresence(d: any) {
 }
 
 // ---------- login (token assinado, sem cookie) ----------
+const envTrim = (deps: Deps, k: string) => (deps.env(k) ?? "").trim();
+
 function makeAuth(deps: Deps) {
-  const secret = deps.env("SESSION_SECRET") || "";
+  const secret = envTrim(deps, "SESSION_SECRET");
   const now = deps.now ?? Date.now;
   const sign = (exp: string | number) => crypto.createHmac("sha256", secret).update(String(exp)).digest("hex");
   return {
-    configured: !!secret && !!deps.env("ADMIN_PASSWORD"),
+    configured: !!secret && !!envTrim(deps, "ADMIN_PASSWORD"),
     make: () => { const exp = now() + SESSION_MS; return `${exp}.${sign(exp)}`; },
     valid(token: string) {
       const [exp, sig] = (token || "").split(".");
@@ -136,14 +138,22 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
     return text ? JSON.parse(text) : {};
   };
   const isAdmin = () => auth.valid((req.headers.get("authorization") || "").replace(/^Bearer /, ""));
-  const presenceKeyOk = () => {
-    const k = deps.env("PRESENCE_KEY");
-    return !!k && safeEq(req.headers.get("x-presence-key") || "", k);
+  // null = chave ok; senão a resposta de erro, dizendo se falta configurar no Netlify ou se a chave não bate
+  const presenceDenied = (): Response | null => {
+    const k = envTrim(deps, "PRESENCE_KEY");
+    if (!k) return fail(503, "A variável PRESENCE_KEY não está configurada no Netlify (crie e faça um novo deploy)");
+    return safeEq((req.headers.get("x-presence-key") || "").trim(), k) ? null : fail(401, "Chave inválida: não confere com a PRESENCE_KEY do Netlify");
   };
 
   try {
     // --- público ---
-    if (seg[0] === "info" && method === "GET") return json({ success: true, invites: false, presence: "push" });
+    // `config` mostra só se cada variável existe no deploy atual (nunca o valor): ajuda a achar o que falta
+    if (seg[0] === "info" && method === "GET") {
+      return json({
+        success: true, invites: false, presence: "push",
+        config: { ADMIN_PASSWORD: !!envTrim(deps, "ADMIN_PASSWORD"), SESSION_SECRET: !!envTrim(deps, "SESSION_SECRET"), PRESENCE_KEY: !!envTrim(deps, "PRESENCE_KEY") },
+      });
+    }
 
     if (seg[0] === "profiles" && seg.length === 1 && method === "GET") {
       const profiles: any[] = (await data.get("profiles", { type: "json" })) ?? [];
@@ -156,13 +166,14 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
     // --- login ---
     if (seg[0] === "login" && method === "POST") {
-      if (!auth.configured) return fail(503, "Servidor sem ADMIN_PASSWORD/SESSION_SECRET configurados no Netlify");
+      if (!envTrim(deps, "ADMIN_PASSWORD")) return fail(503, "A variável ADMIN_PASSWORD não está configurada no Netlify (crie e faça um novo deploy)");
+      if (!auth.configured) return fail(503, "A variável SESSION_SECRET não está configurada no Netlify (crie e faça um novo deploy)");
       const ipKey = "fails-" + crypto.createHash("sha256").update(deps.ip || "?").digest("hex").slice(0, 16);
       const auths = deps.store("auth");
       const f = await auths.get(ipKey, { type: "json" });
       if (f && f.n >= 5 && f.until > now()) return fail(429, "Muitas tentativas. Tente de novo em alguns minutos.");
       const body = await readBody(2_000);
-      if (safeEq(String(body?.password ?? ""), deps.env("ADMIN_PASSWORD")!)) {
+      if (safeEq(String(body?.password ?? "").trim(), envTrim(deps, "ADMIN_PASSWORD"))) {
         if (f) await auths.setJSON(ipKey, { n: 0, until: 0 });
         return json({ success: true, token: auth.make() });
       }
@@ -172,12 +183,14 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
 
     // --- bot envia o status (chave própria, sem acesso ao resto) ---
     if (seg[0] === "presence-ids" && method === "GET") {
-      if (!presenceKeyOk()) return fail(401, "Chave inválida");
+      const denied = presenceDenied();
+      if (denied) return denied;
       const profiles: any[] = (await data.get("profiles", { type: "json" })) ?? [];
       return json({ success: true, ids: profiles.map((p) => p.discordId) });
     }
     if (seg[0] === "presence" && method === "POST") {
-      if (!presenceKeyOk()) return fail(401, "Chave inválida");
+      const denied = presenceDenied();
+      if (denied) return denied;
       const body = await readBody(300_000);
       const profiles: any[] = (await data.get("profiles", { type: "json" })) ?? [];
       const wanted = new Set(profiles.map((p) => p.discordId));

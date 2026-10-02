@@ -21,6 +21,12 @@ Hospedagem 100% no **Netlify** (grátis). O status ao vivo vem de um **bot do Di
 Netlify → Domain management → Add a domain. Para `www`: CNAME → `SEU-SITE.netlify.app`.
 Para o domínio sem `www`: Netlify DNS (trocar os nameservers) ou ALIAS/ANAME. O HTTPS é automático.
 
+## Diagnóstico rápido
+Abra `https://SEU-SITE/api/info`. Em `config` aparece `true` ou `false` para cada variável **no deploy atual**
+(nunca o valor). Se alguma estiver `false`, crie a variável no Netlify (escopo *Functions*, contexto *Production*) e faça
+um novo deploy. O login e o bot também passam a dizer exatamente o que falta ("A variável X não está configurada…"
+ou "Chave inválida: não confere…"). Espaços e quebras de linha sobrando nas pontas dos valores são ignorados.
+
 ## Como funciona
 - `index.html` mostra todos os perfis lado a lado. `admin.html` é o painel (perfis, emblemas extras, estoque).
 - `netlify/functions/api.mts` + `netlify/lib/api-core.mts`: a API (login, perfis, estoque, status).

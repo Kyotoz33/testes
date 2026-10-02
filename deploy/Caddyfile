@@ -1,6 +1,5 @@
-# Troque pelo seu endereço. Sem domínio? Veja server/README.md (sslip.io ou DuckDNS, grátis).
-# Exemplo: 203-0-113-5.sslip.io  (troque pelo IP da sua VPS, com traços)
-SEU-ENDERECO-AQUI {
+# API na VPS (o site fica no Netlify). Antes, no DNS: registro A  api -> IP da VPS
+api.tremdaselva.cc {
 	encode gzip
 	reverse_proxy 127.0.0.1:3000
 }

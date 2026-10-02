@@ -91,7 +91,7 @@ function update(el, p) {
   }
   for (const a of (d?.activities ?? []).filter((a) => a.type !== 4 && a.name !== "Spotify")) {
     const img = a.assets?.large_image && a.application_id && !a.assets.large_image.includes(":")
-      ? `https://cdn.discordapp.com/app-assets/${a.application_id}/${a.assets.large_image}.png` : "";
+      ? `https://cdn.discordapp.com/app-assets/${esc(a.application_id)}/${esc(a.assets.large_image)}.png` : "";
     rows.push(`<div class="act">${img ? `<img src="${img}" alt="">` : `<div class="ph">🎮</div>`}
       <div><small>${a.type === 0 ? "Jogando" : a.type === 1 ? "Transmitindo" : a.type === 3 ? "Assistindo" : "Atividade"}</small>
       <b>${esc(a.name)}</b>${a.details ? `<span>${esc(a.details)}</span>` : ""}${a.state ? `<span>${esc(a.state)}</span>` : ""}</div></div>`);

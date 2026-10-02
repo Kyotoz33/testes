@@ -1,5 +1,10 @@
-# Netlify hospeda só o site (parte visual). A API e o bot ficam na VPS.
-# No painel do Netlify: Site configuration > Environment variables > API_URL = https://api.seudominio.com
+# Netlify hospeda o site E a API (funções em netlify/functions + armazenamento Blobs).
+# O status do Discord é enviado pelo bot de alguém (ver bot-presence/LEIA-ME.md).
+# Variáveis no Netlify (Site configuration > Environment variables):
+#   ADMIN_PASSWORD  senha do painel (você escolhe)
+#   SESSION_SECRET  texto longo aleatório (assina o login)
+#   PRESENCE_KEY    chave que o bot usa para enviar o status
+# (API_URL só é preciso se a API ficar em outro endereço, ex.: o servidor da pasta server/ numa VPS)
 [build]
   publish = "dist"
   command = '''

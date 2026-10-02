@@ -1,0 +1,11 @@
+{
+  "name": "perfil-site",
+  "private": true,
+  "description": "Site de perfis (Netlify): funções + armazenamento Blobs",
+  "dependencies": {
+    "@netlify/blobs": "^11.1.3"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^6.0.2"
+  }
+}

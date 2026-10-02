@@ -242,6 +242,8 @@ app.delete("/api/profiles/:id", auth, async (req, res) => {
   res.json({ success: true });
 });
 
+app.get("/api/info", (_, res) => res.json({ success: true, invites: true, presence: "bot" }));
+
 // ---------- convites (só com login) ----------
 // link para autorizar o bot em outro servidor (permissão mínima: criar convite)
 app.get("/api/bot-invite", auth, (_, res) => {

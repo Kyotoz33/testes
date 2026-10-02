@@ -37,7 +37,7 @@ function logout(text) {
 }
 
 async function refresh() {
-  profiles = (await api("/api/profiles")).data;
+  profiles = (await api("/api/profiles?t=" + Date.now())).data; // ?t= fura o cache da CDN
   $("list").innerHTML = profiles.length ? profiles.map((p) => {
     const u = p.discord?.discord_user;
     const av = u?.avatar ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=64` : "";
@@ -137,6 +137,16 @@ $("form").onsubmit = async (e) => {
 async function show() {
   $("login").hidden = true;
   $("panel").hidden = false;
+  // sem bot próprio (Netlify), os convites automáticos não existem: o status vem do bot de quem enviar
+  try {
+    if (!(await api("/api/info")).invites) {
+      document.querySelector(".invite .row-copy").hidden = true;
+      $("inv-out").hidden = true;
+      $("inv-help").textContent = "O status ao vivo vem do bot configurado no seu site (ex.: o de um amigo). " +
+        "Para aparecer, a pessoa precisa estar em um servidor onde esse bot esteja: peça ao dono do bot o convite " +
+        "desse servidor e mande para quem você quer mostrar. Quando a pessoa entrar, o aviso \"fora do servidor\" some sozinho.";
+    }
+  } catch {}
   await Promise.all([refresh(), refreshStock()]);
 }
 

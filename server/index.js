@@ -190,6 +190,10 @@ const fail = (res, code, message) => res.status(code).json({ success: false, err
 // Lista fixa de arquivos: nada de server/ (.env, dados) fica exposto.
 const SITE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const SITE_FILES = new Set(["index.html", "admin.html", "app.js", "admin.js", "bg.js", "badges.js", "config.js", "style.css", "admin.css"]);
+app.get("/badges/:file", (req, res, next) => { // ícones dos emblemas (lista fixa de formatos)
+  if (!/^[a-z0-9-]+\.(png|svg)$/.test(req.params.file)) return next();
+  res.sendFile(path.join(SITE, "badges", req.params.file));
+});
 app.get("/:file?", (req, res, next) => {
   const f = req.params.file || "index.html";
   if (!SITE_FILES.has(f)) return next();

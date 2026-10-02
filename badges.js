@@ -16,18 +16,28 @@ window.DISCORD_FLAGS = [
   [1 << 22, "Desenvolvedor Ativo", "6bdc42827a38498929a4920da12695d9"],
 ];
 
-// Emblemas que a API não entrega: você marca no painel. chave: [nome, hash]
+// Emblemas que a API não entrega: você marca no painel. chave: [nome, imagem]
+// A maioria é hospedada aqui, na pasta badges/ (ícones MIT: ver badges/LICENSE-icones.txt),
+// então não depende da CDN do Discord.
 window.MANUAL_BADGES = {
-  nitro: ["Discord Nitro", "2ba85e8026a8614b640c2837bcdfe21b"],
-  boost1: ["Booster desde 1 mês", "51040c70d4f20a921ad6674ff86fc95c"],
-  boost2: ["Booster desde 2 meses", "0e4080d1d333bc7ad29ef6528b6f2fb7"],
-  boost3: ["Booster desde 3 meses", "72bed924410c304dbe3d00a6e593ff59"],
-  boost6: ["Booster desde 6 meses", "df199d2050d3ed4ebf84d64ae83989f8"],
-  boost9: ["Booster desde 9 meses", "996b3e870e8a22ce519b3a50e6bdd52f"],
-  boost12: ["Booster desde 12 meses", "991c9f39ee33d7537d9f408c3e53141e"],
-  boost15: ["Booster desde 15 meses", "cb3ae83c15e970e8f3d410bc62cb8b99"],
-  boost18: ["Booster desde 18 meses", "7142225d31238f6387d9f09efaa02759"],
-  boost24: ["Booster desde 24 meses", "ec92202290b48d0879b7413d2dde3bab"],
-  legacy: ["Originalmente conhecido como", "6de6d34650760ba5551a79732e98ed60"],
-  quest: ["Concluiu uma missão", "7d9ae358c8c5e118768335dbe68b4fb8"],
+  nitro: ["Discord Nitro", "badges/nitro.svg"],
+  nitro_bronze: ["Nitro Bronze (1 mês)", "badges/nitro-bronze.png"],
+  nitro_silver: ["Nitro Prata (3 meses)", "badges/nitro-silver.png"],
+  nitro_gold: ["Nitro Ouro (6 meses)", "badges/nitro-gold.png"],
+  nitro_platinum: ["Nitro Platina (12 meses)", "badges/nitro-platinum.png"],
+  nitro_diamond: ["Nitro Diamante (24 meses)", "badges/nitro-diamond.png"],
+  nitro_emerald: ["Nitro Esmeralda (36 meses)", "badges/nitro-emerald.png"],
+  nitro_ruby: ["Nitro Rubi (60 meses)", "badges/nitro-ruby.png"],
+  nitro_opal: ["Nitro Opala (72+ meses)", "badges/nitro-opal.png"],
+  boost1: ["Booster desde 1 mês", "badges/boost-1.svg"],
+  boost2: ["Booster desde 2 meses", "badges/boost-2.svg"],
+  boost3: ["Booster desde 3 meses", "badges/boost-3.svg"],
+  boost6: ["Booster desde 6 meses", "badges/boost-4.svg"],
+  boost9: ["Booster desde 9 meses", "badges/boost-5.svg"],
+  boost12: ["Booster desde 12 meses", "badges/boost-6.svg"],
+  boost15: ["Booster desde 15 meses", "badges/boost-7.svg"],
+  boost18: ["Booster desde 18 meses", "badges/boost-8.svg"],
+  boost24: ["Booster desde 24 meses", "badges/boost-9.svg"],
+  quest: ["Concluiu uma missão", "badges/quest.png"],
+  legacy: ["Originalmente conhecido como", "https://cdn.discordapp.com/badge-icons/6de6d34650760ba5551a79732e98ed60.png"],
 };

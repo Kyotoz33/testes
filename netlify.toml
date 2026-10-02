@@ -10,6 +10,7 @@
   command = '''
     mkdir -p dist
     cp index.html admin.html app.js admin.js bg.js badges.js config.js style.css admin.css dist/
+    cp -r badges dist/badges
     if [ -n "$API_URL" ]; then sed -i "s|apiUrl: \"[^\"]*\"|apiUrl: \"$API_URL\"|" dist/config.js; fi
   '''
 

@@ -74,10 +74,10 @@ function update(el, p) {
   q(".dot").title = status;
 
   // emblemas automáticos (API) + extras marcados no painel (Nitro, Boost...)
-  const autoBadges = DISCORD_FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) => [n, h]);
+  const autoBadges = DISCORD_FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) => [n, `https://cdn.discordapp.com/badge-icons/${h}.png`]);
   const extraBadges = (p.badges || []).map((k) => MANUAL_BADGES[k]).filter(Boolean);
-  setHTML(q(".badges"), [...autoBadges, ...extraBadges].map(([n, h]) =>
-    `<img class="badge-icon" src="https://cdn.discordapp.com/badge-icons/${h}.png" alt="${n}" title="${n}" data-fallback="${n}" data-cls="badge">`).join(""));
+  setHTML(q(".badges"), [...autoBadges, ...extraBadges].map(([n, src]) =>
+    `<img class="badge-icon" src="${esc(src)}" alt="${n}" title="${n}" data-fallback="${n}" data-cls="badge">`).join(""));
 
   const custom = d?.activities.find((a) => a.type === 4);
   setText(q(".custom"), custom ? `${custom.emoji?.name || ""} ${custom.state || ""}`.trim() : "");

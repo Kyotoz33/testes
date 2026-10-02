@@ -57,8 +57,8 @@ function gstat(p) {
 }
 
 // emblemas extras (Nitro, Boost...): caixas de marcar com o ícone oficial
-$("f-badges").innerHTML = Object.entries(MANUAL_BADGES).map(([k, [name, hash]]) =>
-  `<label><input type="checkbox" value="${k}"><img src="https://cdn.discordapp.com/badge-icons/${hash}.png" alt="" onerror="this.remove()">${esc(name)}</label>`).join("");
+$("f-badges").innerHTML = Object.entries(MANUAL_BADGES).map(([k, [name, src]]) =>
+  `<label><input type="checkbox" value="${k}"><img src="${esc(src)}" alt="" onerror="this.remove()">${esc(name)}</label>`).join("");
 
 function linkRow(l = {}) {
   const row = document.createElement("div");

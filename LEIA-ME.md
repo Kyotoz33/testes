@@ -27,5 +27,11 @@ Para o domínio sem `www`: Netlify DNS (trocar os nameservers) ou ALIAS/ANAME. O
 - Dados em **Netlify Blobs** (global em produção). Códigos do estoque e senha **nunca** passam pelo bot.
 - Se o bot ficar mais de 10 minutos sem enviar nada, o site deixa de mostrar status (em vez de mostrar dado velho).
 
+## Ícones dos emblemas
+Os emblemas extras (Nitro e níveis, Booster, missão) usam imagens da pasta `badges/`, hospedadas no seu próprio site
+(ícones do projeto [Discord-badges](https://github.com/Fmasterpro27/Discord-badges), licença MIT em
+`badges/LICENSE-icones.txt`). As artes dos emblemas são marcas do Discord. Os emblemas automáticos
+(HypeSquad, Dev Ativo etc.) ainda vêm da CDN do Discord, por código em `badges.js`.
+
 ## Alternativa com servidor próprio (VPS)
 A pasta `server/` tem a mesma API em Node + bot próprio, para quem tiver uma VPS. Veja `server/README.md`.

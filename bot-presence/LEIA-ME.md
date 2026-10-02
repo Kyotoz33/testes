@@ -1,10 +1,32 @@
-# Adicionar o envio de status ao seu bot (discord.js v14)
+# Adicionar o envio de status ao seu bot
+
+Duas versões: **Python (discord.py 2.x)** logo abaixo, e **Node (discord.js v14)** mais adiante.
 
 Isto faz o bot mandar, a cada poucos segundos, o status (online/ausente, jogo, Spotify) das pessoas
 cadastradas no site. **O bot não abre porta, não precisa de domínio e não recebe nenhum dado**; só envia.
 Nada do site (senha, estoque) fica acessível ao bot: a chave só permite enviar status e ler a lista de IDs.
 
-## Passos
+## Python (discord.py 2.x)
+1. Copie `presence_push.py` para a mesma pasta do `main.py`.
+2. No `main.py`, depois de criar o `bot`/`client`:
+   ```python
+   import os
+   from presence_push import start_presence_push
+
+   start_presence_push(bot, url="https://tremdaselva.cc", key=os.environ["PRESENCE_KEY"])
+   ```
+3. Os intents precisam incluir membros e presenças:
+   ```python
+   intents = discord.Intents.default()
+   intents.members = True
+   intents.presences = True
+   ```
+4. Guarde a chave na variável de ambiente `PRESENCE_KEY` da hospedagem do bot (nunca no código).
+5. No portal do Discord (aba **Bot**), ative **Presence Intent** e **Server Members Intent**.
+
+Não precisa instalar nada: usa o `aiohttp`, que já vem com o discord.py. Erros aparecem no console com `[presence-push]`.
+
+## Node (discord.js v14)
 1. Copie `presence-push.js` para a pasta do bot.
 2. No arquivo principal do bot, depois de criar o `client`:
    ```js

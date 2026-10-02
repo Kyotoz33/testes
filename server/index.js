@@ -43,6 +43,7 @@ async function getProfile() {
       global_name: user.globalName,
       avatar: user.avatar,
       banner: user.banner,
+      accent_color: user.hexAccentColor,
       public_flags: user.flags?.bitfield ?? 0,
     },
     discord_status: presence?.status ?? "offline",

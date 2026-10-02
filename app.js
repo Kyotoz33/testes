@@ -42,6 +42,32 @@ const FLAGS = [
   [1 << 22, "Desenvolvedor Ativo", "6bdc42827a38498929a4920da12695d9"],
 ];
 
+// sem cor de perfil na API (Lanyard): usa a cor predominante do avatar
+let lastAvatar;
+function colorFromAvatar(src) {
+  if (src === lastAvatar) return;
+  lastAvatar = src;
+  const img = new Image();
+  img.crossOrigin = "anonymous";
+  img.onload = () => {
+    try {
+      const cv = document.createElement("canvas");
+      cv.width = cv.height = 32;
+      const x = cv.getContext("2d");
+      x.drawImage(img, 0, 0, 32, 32);
+      const px = x.getImageData(0, 0, 32, 32).data;
+      let r = 0, g = 0, b = 0, w = 0;
+      for (let i = 0; i < px.length; i += 4) {
+        const max = Math.max(px[i], px[i + 1], px[i + 2]), min = Math.min(px[i], px[i + 1], px[i + 2]);
+        const k = (max - min) + 1; // pixels mais saturados pesam mais
+        r += px[i] * k; g += px[i + 1] * k; b += px[i + 2] * k; w += k;
+      }
+      root.style.setProperty("--banner", `rgb(${Math.round(r / w)},${Math.round(g / w)},${Math.round(b / w)})`);
+    } catch {} // canvas bloqueado: mantém a cor de bannerColor
+  };
+  img.src = src;
+}
+
 function render(d) {
   const u = d.discord_user;
   $("display").textContent = u.global_name || u.username;
@@ -50,6 +76,8 @@ function render(d) {
     ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(u.id) >> 22n) % 6n)}.png`;
   // banner: só vem da API própria; senão usa a cor de bannerColor
+  if (u.accent_color) root.style.setProperty("--banner", u.accent_color);
+  else if (!u.banner) colorFromAvatar($("avatar").src);
   if (u.banner) $("banner").style.backgroundImage = `url(https://cdn.discordapp.com/banners/${u.id}/${u.banner}.${u.banner.startsWith("a_") ? "gif" : "png"}?size=600)`;
   $("dot").className = "dot " + d.discord_status;
   $("dot").title = d.discord_status;

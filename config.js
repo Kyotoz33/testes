@@ -10,7 +10,7 @@ window.CONFIG = {
   apiUrl: "",
 
   // Cor do banner quando você não tem banner no Discord (ou usa o Lanyard).
-  bannerColor: "#5865f2",
+  bannerColor: "#ff3b1f",
 
   name: "Seu Nome",
   bio: "Escreva aqui algo sobre você.",

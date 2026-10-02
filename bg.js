@@ -23,7 +23,7 @@
     for (const d of dots) {
       d.y -= d.vy; d.x += d.vx; d.p += d.s;
       if (d.y < -5) { d.y = h + 5; d.x = Math.random() * w; }
-      ctx.fillStyle = `rgba(190,200,255,${d.a * (0.6 + 0.4 * Math.sin(d.p))})`;
+      ctx.fillStyle = `rgba(242,240,234,${d.a * (0.6 + 0.4 * Math.sin(d.p))})`;
       ctx.beginPath(); ctx.arc(d.x, d.y, d.r, 0, 6.28); ctx.fill();
     }
     if (!still && t - last > 6000 && Math.random() < 0.01) {
@@ -35,8 +35,8 @@
       s.life += 0.012;
       const len = 140 * (devicePixelRatio || 1), x = s.x + s.life * len * 2.2, y = s.y + s.life * len * 1.1;
       const g = ctx.createLinearGradient(x - len, y - len / 2, x, y);
-      g.addColorStop(0, "rgba(180,190,255,0)");
-      g.addColorStop(1, `rgba(200,210,255,${0.35 * Math.sin(s.life * Math.PI)})`);
+      g.addColorStop(0, "rgba(242,240,234,0)");
+      g.addColorStop(1, `rgba(242,240,234,${0.35 * Math.sin(s.life * Math.PI)})`);
       ctx.strokeStyle = g; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(x - len, y - len / 2); ctx.lineTo(x, y); ctx.stroke();
     }

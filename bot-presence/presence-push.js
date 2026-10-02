@@ -7,7 +7,9 @@
 //
 // Requisitos do bot: no portal do Discord, ativar "Presence Intent" e "Server Members Intent"
 // e declarar no código GatewayIntentBits.Guilds, GuildMembers e GuildPresences.
-module.exports = function startPresencePush(client, { url, key, every = 15000 }) {
+// extra (opcional): async (userId) => ({ premium_type: 0..3 }) | null
+//   Entrega o Nitro de quem já autorizou seu bot por OAuth (veja o LEIA-ME).
+module.exports = function startPresencePush(client, { url, key, every = 15000, extra }) {
   if (!url || !key) throw new Error("presence-push: informe url e key");
   const base = url.replace(/\/$/, "");
   const headers = { "Content-Type": "application/json", "X-Presence-Key": key };
@@ -16,6 +18,18 @@ module.exports = function startPresencePush(client, { url, key, every = 15000 })
   const userCache = new Map(); // id -> { at, user }  (avatar/banner/emblemas mudam pouco)
   const missing = new Map();   // id -> quando não achamos a pessoa em nenhum servidor do bot
   let ids = [], idsAt = 0, last = "", lastSent = 0, started = false;
+
+  const extras = new Map(); // id -> { at, val }  (o Nitro muda raramente: não consulta a cada ciclo)
+  async function getExtra(id) {
+    if (!extra) return {};
+    const c = extras.get(id);
+    if (c && Date.now() - c.at < 30 * 60 * 1000) return c.val;
+    let val;
+    try { val = (await extra(id)) || {}; }
+    catch (e) { console.error("[presence-push] extra falhou:", e.message); val = c ? c.val : {}; }
+    extras.set(id, { at: Date.now(), val });
+    return val;
+  }
 
   async function getUser(id) {
     const c = userCache.get(id);
@@ -47,8 +61,10 @@ module.exports = function startPresencePush(client, { url, key, every = 15000 })
     const presence = member?.presence;
     const acts = presence?.activities ?? [];
     const sp = acts.find((a) => a.name === "Spotify" && a.type === 2);
+    const { premium_type } = await getExtra(id);
     return {
       in_guild: !!member,
+      premium_type,
       discord_user: {
         id: user.id, username: user.username, global_name: user.globalName,
         avatar: user.avatar, banner: user.banner, public_flags: user.flags?.bitfield ?? 0,
@@ -100,4 +116,11 @@ module.exports = function startPresencePush(client, { url, key, every = 15000 })
   };
   if (client.isReady?.()) start();
   else { client.once("ready", start); client.once("clientReady", start); }
+};
+
+// Ajudante: com o token OAuth de uma pessoa (escopo identify), devolve o tipo de Nitro (0 nenhum, 1 Classic,
+// 2 Nitro, 3 Basic) ou null se o token não vale mais.
+module.exports.premiumTypeFromToken = async (accessToken) => {
+  const r = await fetch("https://discord.com/api/v10/users/@me", { headers: { Authorization: `Bearer ${accessToken}` } });
+  return r.ok ? ((await r.json()).premium_type ?? 0) : null;
 };

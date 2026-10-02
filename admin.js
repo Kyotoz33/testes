@@ -51,9 +51,10 @@ async function refresh() {
 function gstat(p) {
   const d = p.discord;
   if (!d) return `<small class="gstat">Bot offline: status indisponível</small>`;
-  return d.in_guild
+  const nitro = d.premium_type > 0 ? `<small class="gstat in">✔ Nitro detectado pelo bot (emblema automático)</small>` : "";
+  return (d.in_guild
     ? `<small class="gstat in">✔ no servidor do bot (status ao vivo)</small>`
-    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`;
+    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`) + nitro;
 }
 
 // emblemas extras (Nitro, Boost...): caixas de marcar com o ícone oficial

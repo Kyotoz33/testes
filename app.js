@@ -75,7 +75,10 @@ function update(el, p) {
 
   // emblemas automáticos (API) + extras marcados no painel (Nitro, Boost...)
   const autoBadges = DISCORD_FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) => [n, `https://cdn.discordapp.com/badge-icons/${h}.png`]);
-  const extraBadges = (p.badges || []).map((k) => MANUAL_BADGES[k]).filter(Boolean);
+  const keys = [...(p.badges || [])];
+  // Nitro detectado pelo bot (OAuth): entra sozinho, a menos que você tenha marcado um nível de Nitro na mão
+  if ((d?.premium_type ?? 0) > 0 && !keys.some((k) => k.startsWith("nitro"))) keys.unshift("nitro");
+  const extraBadges = keys.map((k) => MANUAL_BADGES[k]).filter(Boolean);
   setHTML(q(".badges"), [...autoBadges, ...extraBadges].map(([n, src]) =>
     `<img class="badge-icon" src="${esc(src)}" alt="${n}" title="${n}" data-fallback="${n}" data-cls="badge">`).join(""));
 

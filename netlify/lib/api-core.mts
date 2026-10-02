@@ -88,6 +88,8 @@ function cleanPresence(d: any) {
     : undefined;
   return {
     in_guild: !!d.in_guild,
+    // tipo de Nitro (0 nenhum, 1 Classic, 2 Nitro, 3 Basic), vindo do OAuth do bot; ausente = o bot não sabe
+    premium_type: int(d.premium_type) !== undefined ? Math.min(3, Math.max(0, int(d.premium_type)!)) : undefined,
     discord_user: {
       id,
       username: str(u.username, 40),

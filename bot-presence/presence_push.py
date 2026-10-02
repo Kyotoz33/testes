@@ -18,11 +18,39 @@ import aiohttp
 import discord
 
 
-def start_presence_push(client, url, key, every=15):
+async def premium_type_from_token(access_token):
+    """Ajudante: com o token OAuth de uma pessoa (escopo identify), devolve o tipo de Nitro dela
+    (0 nenhum, 1 Classic, 2 Nitro, 3 Basic) ou None se o token não funcionar mais."""
+    async with aiohttp.ClientSession() as s:
+        async with s.get("https://discord.com/api/v10/users/@me",
+                         headers={"Authorization": f"Bearer {access_token}"}) as r:
+            if r.status != 200:
+                return None
+            return (await r.json()).get("premium_type", 0)
+
+
+def start_presence_push(client, url, key, every=15, extra=None):
+    """extra (opcional): função async  extra(user_id) -> {"premium_type": 0..3} | None.
+    Use para entregar o Nitro das pessoas que já autorizaram seu bot por OAuth (veja o LEIA-ME)."""
     base = url.rstrip("/")
     headers = {"Content-Type": "application/json", "X-Presence-Key": key}
     state = {"started": False, "ids": [], "ids_at": 0.0, "last": "", "sent_at": 0.0}
-    users = {}  # id -> (quando buscou, user): avatar/banner/emblemas mudam pouco
+    users = {}   # id -> (quando buscou, user): avatar/banner/emblemas mudam pouco
+    extras = {}  # id -> (quando buscou, dict do extra): Nitro muda raramente, não consulta a cada ciclo
+
+    async def get_extra(uid):
+        if not extra:
+            return {}
+        hit = extras.get(uid)
+        if hit and time.time() - hit[0] < 1800:
+            return hit[1]
+        try:
+            val = await extra(uid) or {}
+        except Exception as e:
+            print("[presence-push] extra falhou:", e)
+            val = hit[1] if hit else {}
+        extras[uid] = (time.time(), val)
+        return val
 
     def ms(dt):
         return int(dt.timestamp() * 1000) if dt else None
@@ -72,7 +100,7 @@ def start_presence_push(client, url, key, every=15):
             return None
         acts = list(member.activities) if member else []
         spotify = next((a for a in acts if isinstance(a, discord.Spotify)), None)
-        return {
+        out = {
             "in_guild": member is not None,
             "discord_user": {
                 "id": str(user.id),
@@ -92,6 +120,10 @@ def start_presence_push(client, url, key, every=15):
                 "timestamps": {"start": ms(spotify.start), "end": ms(spotify.end)},
             } if spotify else None,
         }
+        pt = (await get_extra(uid)).get("premium_type")
+        if pt is not None:
+            out["premium_type"] = pt
+        return out
 
     async def tick(session):
         try:

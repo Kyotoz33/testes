@@ -93,3 +93,21 @@ Acesse `https://SEU-ENDERECO/` (site) e `https://SEU-ENDERECO/admin.html` (paine
   Para gerar o convite, o bot precisa da permissão "Criar convite": use o botão
   "Link para autorizar o bot" (ele já pede só essa permissão) e autorize no seu servidor.
 - Não usamos selfbot (viola os Termos do Discord e expõe o token da sua conta).
+
+## Site no Netlify (grátis) + API na VPS, com o seu domínio
+O Netlify serve só o site; o bot e a API continuam na VPS (o Netlify grátis não mantém o bot ligado nem guarda os dados).
+O `netlify.toml` já publica apenas os arquivos do site (sem `server/`).
+
+1. **API na VPS com HTTPS num subdomínio.** No DNS do seu domínio crie `api` → registro **A** com o IP da VPS.
+   No `deploy/Caddyfile` use `api.seudominio.com { reverse_proxy 127.0.0.1:3000 }` e recarregue o Caddy
+   (o certificado sai sozinho). Teste: `https://api.seudominio.com/api/profiles` deve responder JSON.
+2. **No `.env` da VPS** deixe só o seu site autorizado e reinicie:
+   `ALLOWED_ORIGIN=https://seudominio.com,https://www.seudominio.com`
+3. **No Netlify** (Site configuration → Environment variables): `API_URL = https://api.seudominio.com`
+   e faça um novo deploy. (Sem essa variável o site tenta usar a API no mesmo endereço e mostra "API indisponível".)
+4. **Domínio no Netlify:** Domain management → Add a domain.
+   - `www.seudominio.com`: no DNS, **CNAME** `www` → `kyotoz33-perfil.netlify.app`.
+   - domínio sem `www` (raiz): use o Netlify DNS (ele orienta a trocar os nameservers) ou, se o seu provedor
+     tiver, um registro ALIAS/ANAME para `kyotoz33-perfil.netlify.app`.
+   - O HTTPS do site é automático (Let's Encrypt).
+5. Painel em `https://seudominio.com/admin.html` (a senha é conferida pela API; o arquivo é só a tela).

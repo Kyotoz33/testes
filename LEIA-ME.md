@@ -41,6 +41,12 @@ o `presence_push`). O **fundo do cartão** e os blocos ganham uma versão bem es
 mesma cor, como no Discord; cor sem saturação deixa o cartão neutro. A cor do avatar é a "dominante viva" (não a média),
 para fotos escuras não darem banner preto. A "Hora local" só aparece se você marcar "Mostrar a hora local no cartão" no perfil.
 
+## Ouvir a música do Spotify no site
+Quando você está ouvindo algo no Spotify, o cartão mostra a faixa (capa, nome, artista e barra de progresso) e um botão
+**▶ Ouvir**. Ao clicar, abre o **player oficial do Spotify** com aquela música. Ele só é carregado depois do clique.
+O código da faixa vem do bot (atualize o `presence_push`). Limites do Spotify: o navegador não deixa tocar sozinho,
+quem não está logado no Spotify ouve uma **prévia de 30 s**, e o player **não acompanha o ponto exato** em que você está.
+
 ## Ícones dos emblemas
 Os emblemas extras (Nitro e níveis, Booster, missão) usam imagens da pasta `badges/`, hospedadas no seu próprio site
 (ícones do projeto [Discord-badges](https://github.com/Fmasterpro27/Discord-badges), licença MIT em

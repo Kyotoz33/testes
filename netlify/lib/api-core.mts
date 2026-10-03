@@ -84,7 +84,8 @@ function cleanPresence(d: any) {
   const sp = d.spotify;
   const art = typeof sp?.album_art_url === "string" && /^https:\/\/i\.scdn\.co\/image\/[A-Za-z0-9]+$/.test(sp.album_art_url) ? sp.album_art_url : "";
   const spotify = d.listening_to_spotify && sp && art && int(sp.timestamps?.start) !== undefined && int(sp.timestamps?.end) !== undefined
-    ? { song: str(sp.song, 150), artist: str(sp.artist, 150), album_art_url: art, timestamps: { start: int(sp.timestamps.start), end: int(sp.timestamps.end) } }
+    ? { song: str(sp.song, 150), artist: str(sp.artist, 150), album_art_url: art,
+        track_id: typeof sp.track_id === "string" && /^[A-Za-z0-9]{22}$/.test(sp.track_id) ? sp.track_id : undefined, timestamps: { start: int(sp.timestamps.start), end: int(sp.timestamps.end) } }
     : undefined;
   return {
     in_guild: !!d.in_guild,

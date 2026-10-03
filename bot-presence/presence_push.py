@@ -118,6 +118,7 @@ def start_presence_push(client, url, key, every=15, extra=None):
                 "song": spotify.title,
                 "artist": spotify.artist,
                 "album_art_url": spotify.album_cover_url,
+                "track_id": spotify.track_id,
                 "timestamps": {"start": ms(spotify.start), "end": ms(spotify.end)},
             } if spotify else None,
         }

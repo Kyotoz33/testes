@@ -75,6 +75,7 @@ async function getDiscord(id) {
         song: sp.details,
         artist: sp.state,
         album_art_url: sp.assets?.largeImage?.replace("spotify:", "https://i.scdn.co/image/"),
+        track_id: sp.syncId,
         timestamps: { start: ms(sp.timestamps?.start), end: ms(sp.timestamps?.end) },
       },
     };

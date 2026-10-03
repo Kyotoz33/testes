@@ -126,6 +126,7 @@ function setHTML(node, html) {
 const setText = (node, t) => { if (node.textContent !== t) node.textContent = t; };
 
 function update(el, p) {
+  el._p = p; // guardado para o botão "Ouvir" poder redesenhar o cartão
   const q = (s) => el.querySelector(s);
   const d = p.discord;
   const u = d?.discord_user;
@@ -171,9 +172,15 @@ function update(el, p) {
   const rows = [];
   if (d?.listening_to_spotify && d.spotify) {
     const s = d.spotify;
+    // Player oficial do Spotify, só carregado quando a pessoa clica em "Ouvir" (o navegador bloqueia som automático
+    // e o iframe de terceiros só entra com consentimento). Toca prévia de 30 s; completo se a pessoa estiver logada no Spotify.
+    const open = el._listen && s.track_id;
     rows.push(`<div class="act"><img src="${esc(s.album_art_url)}" alt="">
       <div><small>Ouvindo Spotify</small><b>${esc(s.song)}</b><span>${esc(s.artist)}</span>
-      <div class="bar"><i class="sp-bar" data-s="${s.timestamps.start}" data-e="${s.timestamps.end}"></i></div></div></div>`);
+      <div class="bar"><i class="sp-bar" data-s="${s.timestamps.start}" data-e="${s.timestamps.end}"></i></div>
+      ${s.track_id ? `<button type="button" class="listen" data-listen>${open ? "■ Fechar player" : "▶ Ouvir"}</button>` : ""}</div></div>` +
+      (open ? `<iframe class="sp-embed" src="https://open.spotify.com/embed/track/${esc(s.track_id)}?utm_source=generator&theme=0" height="80"
+        allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy" title="Spotify"></iframe>` : ""));
   }
   for (const a of (d?.activities ?? []).filter((a) => a.type !== 4 && a.name !== "Spotify")) {
     const img = a.assets?.large_image && a.application_id && !a.assets.large_image.includes(":")
@@ -199,6 +206,14 @@ function update(el, p) {
       : esc(l.label)) + `</a>`).join(""));
   q(".s-links").hidden = !(p.links || []).length;
 }
+
+grid.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-listen]");
+  const el = btn?.closest(".profile");
+  if (!el?._p) return;
+  el._listen = !el._listen;
+  update(el, el._p);
+});
 
 function renderAll(list) {
   if (!list.length) {

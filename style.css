@@ -39,8 +39,9 @@ a { color: inherit; text-decoration: none; }
   background: var(--banner, #5865f2) center / cover no-repeat; transition: background-color .4s;
 }
 .banner::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, transparent 20%, var(--blend) 100%);
+  /* bottom: -1px cobre a fresta de 1 pixel que o arredondamento deixa em telas com escala 125%/150% */
+  content: ""; position: absolute; inset: 0 0 -1px 0;
+  background: linear-gradient(to bottom, transparent 20%, var(--blend) calc(100% - 1px), var(--blend));
 }
 
 .body {

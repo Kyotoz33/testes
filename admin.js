@@ -51,10 +51,16 @@ async function refresh() {
 function gstat(p) {
   const d = p.discord;
   if (!d) return `<small class="gstat">Bot offline: status indisponível</small>`;
+  // o que o Discord informou sobre a cor do perfil: ajuda a entender de onde vem a cor do banner no site
+  const u = d.discord_user, hex = /^#[0-9a-f]{6}$/i;
+  const cor = u?.accent_color && hex.test(u.accent_color)
+    ? `<span class="swatch" style="background:${u.accent_color}"></span>cor de destaque ${u.accent_color}`
+    : "sem cor de destaque (o site usa a cor do avatar)";
+  const corLinha = `<small class="gstat">Discord informou: ${cor}${u?.banner ? " · tem banner" : ""}</small>`;
   const nitro = d.premium_type > 0 ? `<small class="gstat in">✔ Nitro detectado pelo bot (emblema automático)</small>` : "";
   return (d.in_guild
     ? `<small class="gstat in">✔ no servidor do bot (status ao vivo)</small>`
-    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`) + nitro;
+    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`) + corLinha + nitro;
 }
 
 // emblemas extras (Nitro, Boost...): caixas de marcar com o ícone oficial

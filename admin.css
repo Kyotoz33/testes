@@ -63,3 +63,4 @@ label.chk input { width: auto; }
 .gstat { font-size: 12px; }
 .item .info small.gstat.in { color: #23a55a; }
 .item .info small.gstat.out { color: #f0b232; }
+.swatch { display: inline-block; width: 10px; height: 10px; margin-right: 5px; border-radius: 3px; vertical-align: -1px; border: 1px solid var(--line); }

@@ -57,10 +57,13 @@ function gstat(p) {
     ? `<span class="swatch" style="background:${u.accent_color}"></span>cor de destaque ${u.accent_color}`
     : "sem cor de destaque (o site usa a cor do avatar)";
   const corLinha = `<small class="gstat">Discord informou: ${cor}${u?.banner ? " · tem banner" : ""}</small>`;
+  // o que o bot está vendo agora: mostra se o Spotify (ou qualquer atividade) chegou até aqui
+  const nomes = (d.activities || []).map((a) => a.name).filter(Boolean);
+  const vistas = `<small class="gstat">O bot vê agora: status ${esc(d.discord_status)} · atividades: ${nomes.length ? esc(nomes.join(", ")) : "nenhuma"}${d.listening_to_spotify ? " (Spotify detectado)" : ""}</small>`;
   const nitro = d.premium_type > 0 ? `<small class="gstat in">✔ Nitro detectado pelo bot (emblema automático)</small>` : "";
   return (d.in_guild
     ? `<small class="gstat in">✔ no servidor do bot (status ao vivo)</small>`
-    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`) + corLinha + nitro;
+    : `<small class="gstat out">✖ fora do servidor do bot: sem status ao vivo</small>`) + vistas + corLinha + nitro;
 }
 
 // emblemas extras (Nitro, Boost...): caixas de marcar com o ícone oficial

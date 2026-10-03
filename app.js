@@ -8,6 +8,7 @@ try { root.dataset.theme = localStorage.getItem("theme") || "dark"; } catch { ro
 $("theme").onclick = () => {
   root.dataset.theme = root.dataset.theme === "dark" ? "light" : "dark";
   try { localStorage.setItem("theme", root.dataset.theme); } catch {}
+  for (const el of cards.values()) applyTint(el);
 };
 
 const TEMPLATE = `
@@ -28,8 +29,29 @@ const TEMPLATE = `
     </div>
   </div>`;
 
-// Cor média do avatar: é o que o Discord usa quando a conta não tem banner nem cor de destaque.
-// Se a imagem não puder ser lida pelo navegador, devolve null e o banner fica com a cor padrão.
+// ---------- cores ----------
+function parseColor(c) {
+  if (!c) return null;
+  const hex = /^#([0-9a-f]{6})$/i.exec(c);
+  if (hex) return [0, 2, 4].map((k) => parseInt(hex[1].slice(k, k + 2), 16));
+  const rgb = /^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/.exec(c);
+  return rgb ? [+rgb[1], +rgb[2], +rgb[3]] : null;
+}
+function rgbToHsl(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+  if (!d) return [0, 0, l];
+  const s = d / (1 - Math.abs(2 * l - 1));
+  const h = mx === r ? ((g - b) / d + (g < b ? 6 : 0)) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4;
+  return [h * 60, s, l];
+}
+function hslToRgb(h, s, l) {
+  const f = (n) => { const k = (n + h / 30) % 12; return l - s * Math.min(l, 1 - l) * Math.max(-1, Math.min(k - 3, 9 - k, 1)); };
+  return [f(0), f(8), f(4)].map((v) => Math.round(v * 255));
+}
+
+// Cor "dominante viva" do avatar: junta os pixels coloridos por matiz e escolhe o grupo mais forte,
+// em vez da média (que numa foto escura dá quase preto). Se o navegador não puder ler a imagem, devolve null.
 const avatarColors = new Map();
 function avatarColor(url) {
   if (!avatarColors.has(url)) {
@@ -38,14 +60,29 @@ function avatarColor(url) {
       img.crossOrigin = "anonymous";
       img.onload = () => {
         try {
-          const c = document.createElement("canvas");
-          c.width = c.height = 8;
+          const N = 32, c = document.createElement("canvas");
+          c.width = c.height = N;
           const x = c.getContext("2d", { willReadFrequently: true });
-          x.drawImage(img, 0, 0, 8, 8);
-          const d = x.getImageData(0, 0, 8, 8).data;
-          let r = 0, g = 0, b = 0, n = 0;
-          for (let k = 0; k < d.length; k += 4) if (d[k + 3] > 200) { r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; }
-          resolve(n ? `rgb(${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)})` : null);
+          x.drawImage(img, 0, 0, N, N);
+          const d = x.getImageData(0, 0, N, N).data;
+          const bins = Array.from({ length: 12 }, () => ({ w: 0, r: 0, g: 0, b: 0 }));
+          let ar = 0, ag = 0, ab = 0, n = 0;
+          for (let k = 0; k < d.length; k += 4) {
+            if (d[k + 3] < 200) continue;
+            const r = d[k], g = d[k + 1], b = d[k + 2];
+            ar += r; ag += g; ab += b; n++;
+            const [h, s, l] = rgbToHsl(r, g, b), v = Math.max(r, g, b) / 255;
+            if (v < 0.2 || s < 0.2 || l > 0.92) continue; // ignora preto, branco e cinza
+            const w = s * s * v, bin = bins[Math.min(11, Math.floor(h / 30))];
+            bin.w += w; bin.r += r * w; bin.g += g * w; bin.b += b * w;
+          }
+          if (!n) return resolve(null);
+          const best = bins.reduce((m, o) => (o.w > m.w ? o : m));
+          let rgb = best.w > n * 0.02 ? [best.r / best.w, best.g / best.w, best.b / best.w] : [ar / n, ag / n, ab / n];
+          // nunca deixa o banner preto ou estourado de claro
+          const [h, s, l] = rgbToHsl(...rgb);
+          rgb = hslToRgb(h, s, Math.min(0.6, Math.max(0.32, l)));
+          resolve(`rgb(${rgb.join(", ")})`);
         } catch { resolve(null); }
       };
       img.onerror = () => resolve(null);
@@ -53,6 +90,18 @@ function avatarColor(url) {
     }));
   }
   return avatarColors.get(url);
+}
+
+// Tom do cartão: o fundo e os blocos ficam numa versão bem escura (ou clara, no tema claro) da cor do perfil,
+// como no Discord. Cor sem saturação (cinza) mantém o cartão neutro.
+function applyTint(el) {
+  const rgb = parseColor(el._color);
+  if (!rgb) return;
+  const [h, s] = rgbToHsl(...rgb), dark = root.dataset.theme !== "light";
+  const sat = Math.round(Math.min(s, dark ? 0.5 : 0.6) * 100);
+  const set = (k, l) => el.style.setProperty(k, `hsl(${Math.round(h)} ${sat}% ${l}%)`);
+  if (dark) { set("--card", 9); set("--panel", 13); set("--line", 20); }
+  else { set("--card", 97); set("--panel", 94); set("--line", 86); }
 }
 
 const grid = $("grid");
@@ -96,10 +145,11 @@ function update(el, p) {
   if (bn._img !== bannerImg) { bn._img = bannerImg; bn.style.backgroundImage = bannerImg; }
   const manualColor = p.bannerColor && p.bannerColor.toLowerCase() !== "#5865f2" ? p.bannerColor : ""; // #5865f2 = padrão antigo
   const fixedColor = manualColor || u?.accent_color || "";
-  if (fixedColor) { bn._src = fixedColor; bn.style.setProperty("--banner", fixedColor); }
+  const setColor = (c) => { el.style.setProperty("--banner", c); el._color = c; applyTint(el); }; // no cartão todo: banner e degradê usam a mesma cor
+  if (fixedColor) { bn._src = fixedColor; setColor(fixedColor); }
   else if (bn._src !== avatar) {
     bn._src = avatar;
-    avatarColor(avatar).then((c) => { if (bn._src === avatar) bn.style.setProperty("--banner", c || "#5865f2"); });
+    avatarColor(avatar).then((c) => { if (bn._src === avatar) setColor(c || "#5865f2"); });
   }
 
   const status = d?.discord_status || "offline";

@@ -37,7 +37,9 @@ ou "Chave inválida: não confere…"). Espaços e quebras de linha sobrando nas
 O banner copia a cor do perfil do Discord, nesta ordem: **imagem de banner** do perfil, **cor de destaque** da conta,
 **cor escolhida à mão** no painel (desmarque "Copiar a cor do perfil do Discord automaticamente") e, por fim, a
 **cor média do avatar**. A imagem do banner e a cor de destaque vêm do bot (por isso reinicie o bot depois de atualizar
-o `presence_push`). A "Hora local" só aparece se você marcar "Mostrar a hora local no cartão" no perfil.
+o `presence_push`). O **fundo do cartão** e os blocos ganham uma versão bem escura (ou clara, no tema claro) dessa
+mesma cor, como no Discord; cor sem saturação deixa o cartão neutro. A cor do avatar é a "dominante viva" (não a média),
+para fotos escuras não darem banner preto. A "Hora local" só aparece se você marcar "Mostrar a hora local no cartão" no perfil.
 
 ## Ícones dos emblemas
 Os emblemas extras (Nitro e níveis, Booster, missão) usam imagens da pasta `badges/`, hospedadas no seu próprio site

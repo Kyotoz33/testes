@@ -79,7 +79,12 @@ function openForm(p) {
   $("f-name").value = p?.name ?? "";
   $("f-bio").value = p?.bio ?? "";
   $("f-tz").value = p?.timezone ?? "America/Sao_Paulo";
-  $("f-color").value = p?.bannerColor || "#5865f2";
+  // "#5865f2" era o valor padrão salvo antes da cor automática existir: conta como automático
+  const manual = !!p?.bannerColor && p.bannerColor.toLowerCase() !== "#5865f2";
+  $("f-autocolor").checked = !manual;
+  $("f-color").value = manual ? p.bannerColor : "#5865f2";
+  $("f-color").disabled = !manual;
+  $("f-clock").checked = p?.showClock === true;
   document.querySelectorAll("#f-badges input").forEach((c) => (c.checked = (p?.badges || []).includes(c.value)));
   $("f-links").innerHTML = "";
   (p?.links?.length ? p.links : [{}]).forEach(linkRow);
@@ -99,6 +104,7 @@ $("login").onsubmit = async (e) => {
 };
 $("logout").onclick = () => logout();
 $("add").onclick = () => openForm(null);
+$("f-autocolor").onchange = () => { $("f-color").disabled = $("f-autocolor").checked; };
 $("cancel").onclick = () => ($("form").hidden = true);
 $("add-link").onclick = () => linkRow();
 
@@ -119,7 +125,8 @@ $("form").onsubmit = async (e) => {
     name: $("f-name").value,
     bio: $("f-bio").value,
     timezone: $("f-tz").value,
-    bannerColor: $("f-color").value,
+    bannerColor: $("f-autocolor").checked ? "" : $("f-color").value,
+    showClock: $("f-clock").checked,
     badges: [...document.querySelectorAll("#f-badges input:checked")].map((c) => c.value),
     links: [...$("f-links").children].map((r) => ({
       icon: r.querySelector(".l-icon").value,

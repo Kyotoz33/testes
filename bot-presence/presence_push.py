@@ -108,6 +108,7 @@ def start_presence_push(client, url, key, every=15, extra=None):
                 "global_name": user.global_name,
                 "avatar": user.avatar.key if user.avatar else None,
                 "banner": user.banner.key if getattr(user, "banner", None) else None,
+                "accent_color": str(user.accent_color) if getattr(user, "accent_color", None) else None,
                 "public_flags": user.public_flags.value,
             },
             "discord_status": member.status.value if member else "offline",

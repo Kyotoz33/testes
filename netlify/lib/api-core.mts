@@ -55,7 +55,7 @@ function cleanProfile(b: any): { value?: any; error?: string } {
     links.push({ label: str(l.label, 30) || u.hostname, url: u.href, icon });
   }
   const badges = [...new Set((Array.isArray(b.badges) ? b.badges : []).map((k: any) => str(k, 30)).filter((k: string) => /^[a-z0-9_]+$/.test(k)))].slice(0, 20);
-  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, links, badges } };
+  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, showClock: b.showClock === true, links, badges } };
 }
 
 // ---------- validação do status enviado pelo bot ----------
@@ -96,6 +96,8 @@ function cleanPresence(d: any) {
       global_name: str(u.global_name, 40) || null,
       avatar: typeof u.avatar === "string" && idRe.test(u.avatar) ? u.avatar : null,
       banner: typeof u.banner === "string" && idRe.test(u.banner) ? u.banner : null,
+      // cor de destaque da conta no Discord (#rrggbb); o site usa como cor do banner
+      accent_color: typeof u.accent_color === "string" && /^#[0-9a-f]{6}$/i.test(u.accent_color) ? u.accent_color : null,
       public_flags: Math.max(0, int(u.public_flags) ?? 0),
     },
     discord_status: status,

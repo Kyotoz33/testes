@@ -67,7 +67,7 @@ module.exports = function startPresencePush(client, { url, key, every = 15000, e
       premium_type,
       discord_user: {
         id: user.id, username: user.username, global_name: user.globalName,
-        avatar: user.avatar, banner: user.banner, public_flags: user.flags?.bitfield ?? 0,
+        avatar: user.avatar, banner: user.banner, accent_color: user.hexAccentColor ?? null, public_flags: user.flags?.bitfield ?? 0,
       },
       discord_status: presence?.status ?? "offline",
       activities: acts.map((a) => ({

@@ -11,25 +11,49 @@ $("theme").onclick = () => {
 };
 
 const TEMPLATE = `
+  <div class="banner"></div>
   <div class="body">
-    <header class="head">
-      <div class="avatar-box"><img class="avatar" alt="" src=""><span class="dot offline"></span></div>
-      <div class="who">
-        <h1 class="display"></h1>
-        <div class="uname-row">
-          <span class="username"></span>
-          <div class="badges"></div>
-        </div>
-      </div>
-    </header>
+    <div class="avatar-box"><img class="avatar" alt="" src=""><span class="dot offline"></span></div>
+    <h1 class="display"></h1>
+    <div class="uname-row">
+      <span class="username"></span>
+      <div class="badges"></div>
+    </div>
     <p class="custom"></p>
     <div class="panel">
       <section class="s-bio"><h2>Sobre mim</h2><p class="bio"></p></section>
       <section class="s-acts" hidden><h2>Atividade</h2><div class="acts"></div></section>
-      <section><h2>Hora local</h2><p><span class="clock">--:--:--</span> <span class="tz muted"></span></p></section>
+      <section class="s-clock" hidden><h2>Hora local</h2><p><span class="clock">--:--:--</span> <span class="tz muted"></span></p></section>
       <section class="s-links"><h2>Conexões</h2><div class="links"></div></section>
     </div>
   </div>`;
+
+// Cor média do avatar: é o que o Discord usa quando a conta não tem banner nem cor de destaque.
+// Se a imagem não puder ser lida pelo navegador, devolve null e o banner fica com a cor padrão.
+const avatarColors = new Map();
+function avatarColor(url) {
+  if (!avatarColors.has(url)) {
+    avatarColors.set(url, new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const c = document.createElement("canvas");
+          c.width = c.height = 8;
+          const x = c.getContext("2d", { willReadFrequently: true });
+          x.drawImage(img, 0, 0, 8, 8);
+          const d = x.getImageData(0, 0, 8, 8).data;
+          let r = 0, g = 0, b = 0, n = 0;
+          for (let k = 0; k < d.length; k += 4) if (d[k + 3] > 200) { r += d[k]; g += d[k + 1]; b += d[k + 2]; n++; }
+          resolve(n ? `rgb(${Math.round(r / n)}, ${Math.round(g / n)}, ${Math.round(b / n)})` : null);
+        } catch { resolve(null); }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    }));
+  }
+  return avatarColors.get(url);
+}
 
 const grid = $("grid");
 const cards = new Map(); // id do perfil -> elemento
@@ -64,6 +88,19 @@ function update(el, p) {
     ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(p.discordId) >> 22n) % 6n)}.png`;
   if (q(".avatar").getAttribute("src") !== avatar) q(".avatar").src = avatar;
+
+  // Banner: imagem do Discord > cor de destaque da conta > cor escolhida no painel > cor média do avatar
+  const bn = q(".banner");
+  const bannerImg = u?.banner
+    ? `url("https://cdn.discordapp.com/banners/${u.id}/${u.banner}.${u.banner.startsWith("a_") ? "gif" : "png"}?size=600")` : "";
+  if (bn._img !== bannerImg) { bn._img = bannerImg; bn.style.backgroundImage = bannerImg; }
+  const manualColor = p.bannerColor && p.bannerColor.toLowerCase() !== "#5865f2" ? p.bannerColor : ""; // #5865f2 = padrão antigo
+  const fixedColor = manualColor || u?.accent_color || "";
+  if (fixedColor) { bn._src = fixedColor; bn.style.setProperty("--banner", fixedColor); }
+  else if (bn._src !== avatar) {
+    bn._src = avatar;
+    avatarColor(avatar).then((c) => { if (bn._src === avatar) bn.style.setProperty("--banner", c || "#5865f2"); });
+  }
 
   const status = d?.discord_status || "offline";
   q(".dot").className = "dot " + status;
@@ -102,6 +139,7 @@ function update(el, p) {
   q(".s-bio").hidden = !p.bio;
   el._tz = p.timezone || "America/Sao_Paulo";
   setText(q(".tz"), `(${el._tz})`);
+  q(".s-clock").hidden = p.showClock !== true;
 
   // ícones da Simple Icons (https://simpleicons.org): "icon" é o nome do site
   setHTML(q(".links"), (p.links || []).map((l) =>

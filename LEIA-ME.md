@@ -33,6 +33,12 @@ ou "Chave inválida: não confere…"). Espaços e quebras de linha sobrando nas
 - Dados em **Netlify Blobs** (global em produção). Códigos do estoque e senha **nunca** passam pelo bot.
 - Se o bot ficar mais de 10 minutos sem enviar nada, o site deixa de mostrar status (em vez de mostrar dado velho).
 
+## Cor e banner do cartão
+O banner copia a cor do perfil do Discord, nesta ordem: **imagem de banner** do perfil, **cor de destaque** da conta,
+**cor escolhida à mão** no painel (desmarque "Copiar a cor do perfil do Discord automaticamente") e, por fim, a
+**cor média do avatar**. A imagem do banner e a cor de destaque vêm do bot (por isso reinicie o bot depois de atualizar
+o `presence_push`). A "Hora local" só aparece se você marcar "Mostrar a hora local no cartão" no perfil.
+
 ## Ícones dos emblemas
 Os emblemas extras (Nitro e níveis, Booster, missão) usam imagens da pasta `badges/`, hospedadas no seu próprio site
 (ícones do projeto [Discord-badges](https://github.com/Fmasterpro27/Discord-badges), licença MIT em

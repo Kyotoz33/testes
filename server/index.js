@@ -66,7 +66,7 @@ async function getDiscord(id) {
       in_guild: !!member, // false = o bot não enxerga essa pessoa (não está no servidor): sem status ao vivo
       discord_user: {
         id: user.id, username: user.username, global_name: user.globalName,
-        avatar: user.avatar, banner: user.banner, public_flags: user.flags?.bitfield ?? 0,
+        avatar: user.avatar, banner: user.banner, accent_color: user.hexAccentColor ?? null, public_flags: user.flags?.bitfield ?? 0,
       },
       discord_status: presence?.status ?? "offline",
       activities: acts.map(mapActivity),
@@ -146,7 +146,7 @@ function clean(b) {
     links.push({ label: str(l.label, 30) || u.hostname, url: u.href, icon });
   }
   const badges = [...new Set((Array.isArray(b.badges) ? b.badges : []).map((k) => str(k, 30)).filter((k) => /^[a-z0-9_]+$/.test(k)))].slice(0, 20);
-  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, links, badges } };
+  return { value: { discordId, name: str(b.name, 40), bio: str(b.bio, 300), timezone, bannerColor, showClock: b.showClock === true, links, badges } };
 }
 
 // ---------- login ----------

@@ -29,33 +29,34 @@ a { color: inherit; text-decoration: none; }
   width: min(360px, 100%); display: flex; flex-direction: column; background: var(--card);
   border-radius: 8px; overflow: hidden; box-shadow: 0 0 0 1px var(--line);
 }
-.banner { height: 110px; background: var(--banner, #5865f2) center / cover no-repeat; }
 
-.head { position: relative; height: 44px; padding: 0 16px; }
-.avatar-box {
-  position: absolute; left: 16px; top: -48px; width: 92px; height: 92px;
-  border-radius: 50%; background: var(--card); padding: 6px;
-}
+.body { padding: 20px 16px 16px; flex: 1; display: flex; flex-direction: column; }
+
+/* cabeçalho estilo "perfil de amigo": avatar à esquerda, nome e emblemas à direita */
+.head { display: flex; align-items: center; gap: 14px; }
+.avatar-box { position: relative; width: 72px; height: 72px; flex: none; }
 .avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: var(--line); display: block; }
 .dot {
-  position: absolute; right: 2px; bottom: 2px; width: 24px; height: 24px;
-  border-radius: 50%; border: 5px solid var(--card);
+  position: absolute; right: -2px; bottom: -2px; width: 22px; height: 22px;
+  border-radius: 50%; border: 4px solid var(--card);
 }
 .online { background: #23a55a; } .idle { background: #f0b232; }
 .dnd { background: #f23f43; } .offline { background: #80848e; }
 
+.who { min-width: 0; }
+.who h1 { font-size: 21px; font-weight: 800; line-height: 1.2; }
+.uname-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+.username { color: var(--muted); font-size: 14px; }
+
 .badges {
-  position: absolute; right: 12px; top: 8px; display: flex; gap: 4px; flex-wrap: wrap;
-  justify-content: flex-end; max-width: 60%; padding: 4px 6px; border-radius: 8px; background: var(--panel);
+  display: flex; gap: 4px; flex-wrap: wrap; align-items: center;
+  padding: 3px 8px; border-radius: 99px; background: var(--panel);
 }
 .badges:empty { display: none; }
-.badge-icon { width: 20px; height: 20px; display: block; }
+.badge-icon { width: 18px; height: 18px; display: block; }
 .badge { font-size: 11px; color: var(--muted); }
 
-.body { padding: 0 16px 16px; flex: 1; display: flex; flex-direction: column; }
-.body h1 { font-size: 20px; font-weight: 700; }
-.username { color: var(--muted); }
-.custom { margin-top: 8px; }
+.custom { margin-top: 10px; }
 .custom:empty { display: none; }
 
 .panel { flex: 1; align-content: start; margin-top: 12px; padding: 12px; border-radius: 8px; background: var(--panel); display: grid; gap: 12px; }

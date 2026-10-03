@@ -11,14 +11,17 @@ $("theme").onclick = () => {
 };
 
 const TEMPLATE = `
-  <div class="banner"></div>
-  <header class="head">
-    <div class="avatar-box"><img class="avatar" alt="" src=""><span class="dot offline"></span></div>
-    <div class="badges"></div>
-  </header>
   <div class="body">
-    <h1 class="display"></h1>
-    <p class="username"></p>
+    <header class="head">
+      <div class="avatar-box"><img class="avatar" alt="" src=""><span class="dot offline"></span></div>
+      <div class="who">
+        <h1 class="display"></h1>
+        <div class="uname-row">
+          <span class="username"></span>
+          <div class="badges"></div>
+        </div>
+      </div>
+    </header>
     <p class="custom"></p>
     <div class="panel">
       <section class="s-bio"><h2>Sobre mim</h2><p class="bio"></p></section>
@@ -61,13 +64,6 @@ function update(el, p) {
     ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=256`
     : `https://cdn.discordapp.com/embed/avatars/${Number((BigInt(p.discordId) >> 22n) % 6n)}.png`;
   if (q(".avatar").getAttribute("src") !== avatar) q(".avatar").src = avatar;
-
-  // banner do Discord (só na API própria); senão a cor escolhida no painel
-  const bn = q(".banner");
-  bn.style.setProperty("--banner", p.bannerColor || "#5865f2");
-  const bannerImg = u?.banner
-    ? `url(https://cdn.discordapp.com/banners/${u.id}/${u.banner}.${u.banner.startsWith("a_") ? "gif" : "png"}?size=600)` : "";
-  if (bn._img !== bannerImg) { bn._img = bannerImg; bn.style.backgroundImage = bannerImg; }
 
   const status = d?.discord_status || "offline";
   q(".dot").className = "dot " + status;

@@ -29,6 +29,7 @@
       <nav class="tabs">
         <button type="button" class="tab on" data-tab="profiles">Perfis</button>
         <button type="button" class="tab" data-tab="stock">Estoque</button>
+        <button type="button" class="tab" data-tab="utilities">Utilitários</button>
       </nav>
 
       <div id="tab-profiles">
@@ -110,6 +111,16 @@
           </span>
         </div>
         <div id="s-list" class="list"></div>
+      </div>
+
+      <div id="tab-utilities" hidden>
+        <div class="card-form">
+          <h2>Deletar mensagens do Discord</h2>
+          <p class="muted">Use o comando <code>/deletar</code> no Discord para apagar todas as mensagens do canal. Ative ou desative a funcionalidade aqui.</p>
+          <div class="actions">
+            <button type="button" id="msg-del-toggle" class="btn primary">Carregando...</button>
+          </div>
+        </div>
       </div>
     </section>
   </main>

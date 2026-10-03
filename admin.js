@@ -274,10 +274,42 @@ $("stock-form").onsubmit = async (e) => {
 
 try { $("tzs").innerHTML = Intl.supportedValuesOf("timeZone").map((z) => `<option value="${z}">`).join(""); } catch {}
 
+// ---------- deletar mensagens ----------
+let msgDeleteEnabled = false;
+
+async function refreshMsgDeleteState() {
+  try {
+    const r = await api("/api/messages-delete-enabled");
+    msgDeleteEnabled = r.enabled;
+    updateMsgDeleteButton();
+  } catch (err) {
+    $("msg-del-toggle").textContent = "Erro ao carregar estado";
+  }
+}
+
+function updateMsgDeleteButton() {
+  $("msg-del-toggle").textContent = `Deletar Mensagens: ${msgDeleteEnabled ? "ATIVADO" : "DESATIVADO"}`;
+  $("msg-del-toggle").classList.toggle("danger", msgDeleteEnabled);
+}
+
+$("msg-del-toggle").onclick = async () => {
+  if (!confirm(`Você quer ${msgDeleteEnabled ? "DESATIVAR" : "ATIVAR"} a função de deletar mensagens do Discord?`)) return;
+  msg("");
+  try {
+    const r = await api("/api/messages-delete-enabled", "PUT", { enabled: !msgDeleteEnabled });
+    msgDeleteEnabled = r.enabled;
+    updateMsgDeleteButton();
+    msg(`Deletar mensagens ${msgDeleteEnabled ? "ativado" : "desativado"}.`, true);
+  } catch (err) {
+    msg(err.message);
+  }
+};
+
 if (!USE_API) {
   msg("Defina apiUrl no config.js (endereço da API do servidor) para usar o painel.");
 } else if (token) {
   show().catch(() => logout());
+  refreshMsgDeleteState().catch(() => {});
 } else {
   $("login").hidden = false;
 }

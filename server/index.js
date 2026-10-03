@@ -8,7 +8,7 @@ import { Client, GatewayIntentBits, ChannelType } from "discord.js";
 const {
   DISCORD_TOKEN, GUILD_ID, USER_ID, ADMIN_PASSWORD,
   SESSION_SECRET = crypto.randomBytes(32).toString("hex"), // sem valor fixo, o login expira a cada reinício
-  ALLOWED_ORIGIN = "*", PORT = 3000, HOST = "0.0.0.0", DATA_FILE = "./data/profiles.json", STOCK_FILE = "./data/stock.json",
+  ALLOWED_ORIGIN = "*", PORT = 3000, HOST = "0.0.0.0", DATA_FILE = "./data/profiles.json", STOCK_FILE = "./data/stock.json", SETTINGS_FILE = "./data/settings.json",
 } = process.env;
 
 if (!ADMIN_PASSWORD) {
@@ -101,11 +101,14 @@ function makeWriter(file) {
 }
 const writeProfiles = makeWriter(DATA_FILE);
 const writeStock = makeWriter(STOCK_FILE);
+const writeSettings = makeWriter(SETTINGS_FILE);
 
 let profiles = [];
 let stock = [];
+let settings = { messagesDeleteEnabled: false };
 const save = () => writeProfiles(profiles);
 const saveStock = () => writeStock(stock);
+const saveSettings = () => writeSettings(settings);
 
 async function load() {
   try {
@@ -118,6 +121,12 @@ async function load() {
     stock = JSON.parse(await fs.readFile(STOCK_FILE, "utf8"));
   } catch {
     stock = [];
+  }
+  try {
+    settings = JSON.parse(await fs.readFile(SETTINGS_FILE, "utf8"));
+  } catch {
+    settings = { messagesDeleteEnabled: false };
+    await saveSettings();
   }
 }
 
@@ -314,6 +323,17 @@ app.delete("/api/stock/:id", auth, async (req, res) => {
   stock.splice(i, 1);
   await saveStock();
   res.json({ success: true });
+});
+
+// ---------- message deletion toggle ----------
+app.get("/api/messages-delete-enabled", auth, (_, res) => {
+  res.json({ success: true, enabled: settings.messagesDeleteEnabled });
+});
+
+app.put("/api/messages-delete-enabled", auth, async (req, res) => {
+  settings.messagesDeleteEnabled = !!req.body?.enabled;
+  await saveSettings();
+  res.json({ success: true, enabled: settings.messagesDeleteEnabled });
 });
 
 app.use((err, _req, res, _next) => {

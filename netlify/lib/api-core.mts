@@ -277,6 +277,18 @@ export async function handle(req: Request, deps: Deps): Promise<Response> {
       }
     }
 
+    if (seg[0] === "messages-delete-enabled") {
+      const settings: any = (await data.get("settings", { type: "json" })) ?? { messagesDeleteEnabled: false };
+      if (seg.length === 1 && method === "GET") {
+        return json({ success: true, enabled: settings.messagesDeleteEnabled });
+      }
+      if (seg.length === 1 && method === "PUT") {
+        settings.messagesDeleteEnabled = !!((await readBody())?.enabled);
+        await data.setJSON("settings", settings);
+        return json({ success: true, enabled: settings.messagesDeleteEnabled });
+      }
+    }
+
     return fail(404, "Rota não encontrada");
   } catch (e: any) {
     if (e instanceof SyntaxError || e?.message === "grande") return fail(400, "Requisição inválida");

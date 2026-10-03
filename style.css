@@ -27,6 +27,7 @@ a { color: inherit; text-decoration: none; }
 .empty { width: 100%; text-align: center; }
 
 .profile {
+  --blend: color-mix(in srgb, var(--banner) 24%, var(--card)); /* cor onde o banner termina e o corpo começa */
   width: min(340px, 100%); min-height: 540px; display: flex; flex-direction: column;
   background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden;
   box-shadow: 0 24px 60px rgba(0, 0, 0, .5);
@@ -39,13 +40,13 @@ a { color: inherit; text-decoration: none; }
 }
 .banner::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 45%, rgba(0, 0, 0, .35));
+  background: linear-gradient(to bottom, transparent 20%, var(--blend) 100%);
 }
 
 .body {
   padding: 0 20px 22px; flex: 1; display: flex; flex-direction: column;
-  /* a cor do perfil desce do banner e some no fundo do cartão */
-  background: linear-gradient(to bottom, color-mix(in srgb, var(--banner) 20%, transparent), transparent 260px);
+  /* continua o degradê do banner e some aos poucos no fundo do cartão */
+  background: linear-gradient(to bottom, var(--blend), transparent 280px);
 }
 
 .avatar-box {
@@ -53,12 +54,15 @@ a { color: inherit; text-decoration: none; }
   border-radius: 50%; background: var(--card); padding: 6px;
 }
 .avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: var(--line); display: block; }
+/* status no estilo do Discord: online (círculo), ausente (lua), não perturbe (círculo com barra), offline (anel) */
 .dot {
-  position: absolute; right: 2px; bottom: 2px; width: 26px; height: 26px;
-  border-radius: 50%; border: 5px solid var(--card);
+  position: absolute; right: -2px; bottom: -2px; width: 32px; height: 32px; border-radius: 50%;
+  background: var(--card) center / 62% no-repeat; /* o fundo faz o "recorte" em volta do ícone */
 }
-.online { background: #23a55a; } .idle { background: #f0b232; }
-.dnd { background: #f23f43; } .offline { background: #80848e; }
+.dot.online { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='12' cy='12' r='12' fill='%2323a55a'/%3E%3C/svg%3E"); }
+.dot.idle { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='1.5 1.5 21 21'%3E%3Cpath d='M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z' fill='%23f0b232'/%3E%3C/svg%3E"); }
+.dot.dnd { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cmask id='m'%3E%3Crect width='24' height='24' fill='white'/%3E%3Crect x='5.5' y='9.5' width='13' height='5' rx='2.5' fill='black'/%3E%3C/mask%3E%3Ccircle cx='12' cy='12' r='12' fill='%23f23f43' mask='url(%23m)'/%3E%3C/svg%3E"); }
+.dot.offline { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' fill='%2380848e' d='M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24zm0 7.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9z'/%3E%3C/svg%3E"); }
 
 .display { margin-top: 12px; font-size: 24px; font-weight: 800; line-height: 1.15; letter-spacing: -.01em; }
 .uname-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }

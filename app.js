@@ -155,7 +155,7 @@ function update(el, p) {
 
   const status = d?.discord_status || "offline";
   q(".dot").className = "dot " + status;
-  q(".dot").title = status;
+  q(".dot").title = { online: "Online", idle: "Ausente", dnd: "Não perturbe", offline: "Offline" }[status] || status;
 
   // emblemas automáticos (API) + extras marcados no painel (Nitro, Boost...)
   const autoBadges = DISCORD_FLAGS.filter(([b]) => (u?.public_flags ?? 0) & b).map(([, n, h]) => [n, `https://cdn.discordapp.com/badge-icons/${h}.png`]);

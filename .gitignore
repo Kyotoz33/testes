@@ -3,3 +3,4 @@
 ikemen-xbox/chars/*/
 ikemen-xbox/stages/*
 !ikemen-xbox/stages/.gitkeep
+ikemen-xbox/data/lifebar_kof2002/

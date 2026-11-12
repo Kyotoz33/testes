@@ -1,0 +1,5 @@
+
+# Personagens/stages de terceiros: nao versionar (direitos autorais)
+ikemen-xbox/chars/*/
+ikemen-xbox/stages/*
+!ikemen-xbox/stages/.gitkeep

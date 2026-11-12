@@ -14,6 +14,7 @@ def size_mb(p):
     return sum(f.stat().st_size for f in p.rglob("*") if f.is_file()) / 1048576
 
 chars = []
+extras = []
 for d in sorted((root / "chars").iterdir()):
     if not d.is_dir():
         continue
@@ -22,12 +23,13 @@ for d in sorted((root / "chars").iterdir()):
         continue
     main = next((x for x in defs if x.stem.lower() == d.name.lower()), defs[0])
     chars.append((d.name, main.stem, size_mb(d)))
+    extras += [f"{d.name}/{x.name}" for x in defs if x != main]
 
 stages = sorted(p.name for p in (root / "stages").glob("*.def"))
 
 out = ["; gerado por tools/gen_select.py", "", "[Characters]"]
 out += [f"{n}/{s}.def" if s != n else n for n, s, _ in chars]
-out += ["randomselect", "", "[ExtraStages]"] + [f"stages/{s}" for s in stages]
+out += extras + ["randomselect", "", "[ExtraStages]"] + [f"stages/{s}" for s in stages]
 out += ["", "[Options]",
         "arcade.maxmatches = 6,1,1,0,0,0,0,0,0,0",
         "team.maxmatches = 4,1,1,0,0,0,0,0,0,0", ""]

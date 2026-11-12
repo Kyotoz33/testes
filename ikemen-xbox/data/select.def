@@ -16,6 +16,27 @@ ralf/Ralf99_WLS.def
 randomselect
 
 [ExtraStages]
+stages/kof02um_beach_day.def
+stages/kof02um_cambodia_day.def
+stages/kof02um_cambodia_night.def
+stages/kof02um_chinese_restaurant_day.def
+stages/kof02um_chinese_restaurant_night.def
+stages/kof02um_clone_lab_alert.def
+stages/kof02um_clone_lab_facility.def
+stages/kof02um_clone_zero_stage.def
+stages/kof02um_dojo_day.def
+stages/kof02um_dojo_night.def
+stages/kof02um_frozen_clone_lab.def
+stages/kof02um_frozen_clone_zero_stage.def
+stages/kof02um_grecia_stage.def
+stages/kof02um_igniz_stage.def
+stages/kof02um_japan_day.def
+stages/kof02um_korea_stage.def
+stages/kof02um_neo_geo_land.def
+stages/kof02um_sky_noah.def
+stages/kof02um_taiwan_day.def
+stages/kof02um_taiwan_frozen.def
+stages/kof02um_usa_night.def
 
 [Options]
 arcade.maxmatches = 6,1,1,0,0,0,0,0,0,0

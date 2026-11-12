@@ -20,3 +20,18 @@ Pacote de dados (sem o executável) para usar com o seu port UWP do Ikemen GO.
 ## Conteúdo
 Personagens e stages de terceiros têm licenças próprias; use só os que você pode distribuir.
 O Ikemen GO é MIT (veja `LICENCE-IkemenGO.txt`).
+
+## Montando um roster leve (KOF / Street Fighter)
+Os personagens não vêm no repositório (direitos autorais SNK/Capcom). Baixe os que quiser
+de fontes que você confia e solte em `chars/<nome>/`. Depois:
+
+    python3 tools/gen_select.py        # regenera data/select.def e avisa de chars pesados
+    cp save/config.light.ini save/config.ini
+
+Dicas para ficar leve no console:
+- Prefira chars de **sprites 1x, SFF v1**, até ~5-15 MB cada. Evite chars "HD", com
+  muitos helpers/explods ou efeitos de tela cheia.
+- Um roster de 20-30 lutadores já é bom; menos chars = carregamento mais rápido.
+- Stages pequenos, sem vídeo/animação pesada; remova músicas grandes (.wav) ou converta para .ogg.
+- `config.light.ini` desliga o modo 3D (`EnableModel=0`), reduz canais de áudio e mantém 720p/60fps.
+- Teste cada char sozinho no Training antes de adicionar (chars mal feitos travam o jogo).

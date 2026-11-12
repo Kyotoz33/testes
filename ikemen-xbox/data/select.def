@@ -1,13 +1,9 @@
-; select.def - lista de personagens e stages
-; Coloque cada personagem em chars/<nome>/<nome>.def e liste abaixo.
+; gerado por tools/gen_select.py
 
 [Characters]
-; Exemplo (descomente depois de colocar o personagem em chars/):
-; kfm, stages/kfm.def
 randomselect
 
 [ExtraStages]
-; stages/meu_stage.def
 
 [Options]
 arcade.maxmatches = 6,1,1,0,0,0,0,0,0,0

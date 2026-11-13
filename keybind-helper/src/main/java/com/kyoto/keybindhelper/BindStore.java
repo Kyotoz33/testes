@@ -27,6 +27,8 @@ public final class BindStore {
 
     private static String openKey = DEFAULT_OPEN;
     private static final Map<String, String> binds = new LinkedHashMap<>();
+    private static final Map<String, Integer> padBinds = new LinkedHashMap<>();
+    private static int openPad = GamepadInput.OPEN_DEFAULT;
     private static boolean loaded = false;
 
     private BindStore() {}
@@ -44,6 +46,12 @@ public final class BindStore {
             JsonObject o = GSON.fromJson(r, JsonObject.class);
             if (o == null) return;
             if (o.has("openKey")) openKey = o.get("openKey").getAsString();
+            if (o.has("openPad")) openPad = o.get("openPad").getAsInt();
+            if (o.has("pad")) {
+                for (var e : o.getAsJsonObject("pad").entrySet()) {
+                    padBinds.put(e.getKey(), e.getValue().getAsInt());
+                }
+            }
             if (o.has("binds")) {
                 for (var e : o.getAsJsonObject("binds").entrySet()) {
                     binds.put(e.getKey(), e.getValue().getAsString());
@@ -60,6 +68,10 @@ public final class BindStore {
         JsonObject b = new JsonObject();
         binds.forEach(b::addProperty);
         o.add("binds", b);
+        o.addProperty("openPad", openPad);
+        JsonObject p = new JsonObject();
+        padBinds.forEach(p::addProperty);
+        o.add("pad", p);
         try (Writer w = Files.newBufferedWriter(file())) {
             GSON.toJson(o, w);
         } catch (IOException ex) {
@@ -89,7 +101,30 @@ public final class BindStore {
         load();
         m.setToDefault();
         binds.remove(m.getName());
+        padBinds.remove(m.getName());
         finish();
+    }
+
+    /** Associa uma combinacao de botoes do controle (mascara de bits) a uma acao; 0 remove. */
+    public static void setPad(KeyMapping m, int mask) {
+        load();
+        if (mask == 0) padBinds.remove(m.getName()); else padBinds.put(m.getName(), mask);
+        save();
+    }
+
+    public static int padMask(KeyMapping m) {
+        load();
+        return padBinds.getOrDefault(m.getName(), 0);
+    }
+
+    public static Map<String, Integer> padBinds() {
+        load();
+        return padBinds;
+    }
+
+    public static int openPad() {
+        load();
+        return openPad;
     }
 
     private static void finish() {

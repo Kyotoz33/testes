@@ -20,7 +20,8 @@ import java.util.Locale;
 /** Tela propria para ver e alterar as teclas de todos os mods. */
 public class BindScreen extends Screen {
     private static final int ROW_H = 22;
-    private static final int KEY_W = 110;
+    private static final int KEY_W = 90;
+    private static final int PAD_W = 110;
     private static final int RESET_W = 50;
 
     private final Screen parent;
@@ -28,6 +29,8 @@ public class BindScreen extends Screen {
     private final List<Row> rows = new ArrayList<>();
     private double scroll = 0;
     private KeyMapping waiting = null;
+    private KeyMapping waitingPad = null;
+    private int lastPad = GamepadInput.poll();
 
     /** Linha da lista: ou um titulo de categoria, ou um mapeamento. */
     private record Row(String header, KeyMapping mapping) {}
@@ -73,8 +76,8 @@ public class BindScreen extends Screen {
 
     private int listTop() { return 52; }
     private int listBottom() { return height - 36; }
-    private int listLeft() { return width / 2 - 170; }
-    private int listRight() { return width / 2 + 170; }
+    private int listLeft() { return width / 2 - 200; }
+    private int listRight() { return width / 2 + 200; }
 
     private double maxScroll() {
         return Math.max(0, rows.size() * ROW_H - (listBottom() - listTop()));
@@ -110,14 +113,19 @@ public class BindScreen extends Screen {
         }
         g.disableScissor();
 
-        if (waiting != null) {
+        pollPad();
+        if (waitingPad != null) {
+            g.drawCenteredString(font, Component.literal("Aperte o botao do controle (segure LB/RB/LT/RT + botao para combinar). ESC cancela, Delete limpa")
+                    .withStyle(ChatFormatting.GREEN), width / 2, height - 44, 0xFFFFFF);
+        } else if (waiting != null) {
             g.drawCenteredString(font, Component.literal("Pressione uma tecla ou botao do mouse (ESC cancela)")
                     .withStyle(ChatFormatting.AQUA), width / 2, height - 44, 0xFFFFFF);
         }
     }
 
     private void renderMapping(GuiGraphics g, KeyMapping m, int left, int right, int y, int mx, int my) {
-        int keyX = right - RESET_W - 4 - KEY_W;
+        int padX = right - RESET_W - 4 - PAD_W;
+        int keyX = padX - 4 - KEY_W;
         int resetX = right - RESET_W;
         boolean inList = my >= listTop() && my <= listBottom();
 
@@ -134,7 +142,16 @@ public class BindScreen extends Screen {
         if (!isWaiting && conflicts(m)) label = label.copy().withStyle(ChatFormatting.RED);
         g.drawCenteredString(font, label, keyX + KEY_W / 2, y + 7, 0xFFFFFF);
 
-        boolean canReset = !m.isDefault();
+        boolean padWait = waitingPad == m;
+        boolean hoverPad = inList && mx >= padX && mx < padX + PAD_W && my >= y + 1 && my < y + 21;
+        g.fill(padX, y + 1, padX + PAD_W, y + 21, hoverPad ? 0xFF555555 : 0xFF333333);
+        g.renderOutline(padX, y + 1, PAD_W, 20, padWait ? 0xFF55FF55 : 0xFF888888);
+        int pm = BindStore.padMask(m);
+        String ptxt = padWait ? "> ... <" : GamepadInput.describe(pm);
+        g.drawCenteredString(font, Component.literal(ptxt).withStyle(padWait ? ChatFormatting.GREEN : ChatFormatting.WHITE),
+                padX + PAD_W / 2, y + 7, 0xFFFFFF);
+
+        boolean canReset = !m.isDefault() || BindStore.padMask(m) != 0;
         boolean hoverReset = inList && canReset && mx >= resetX && mx < resetX + RESET_W && my >= y + 1 && my < y + 21;
         g.fill(resetX, y + 1, resetX + RESET_W, y + 21, hoverReset ? 0xFF555555 : 0xFF333333);
         g.renderOutline(resetX, y + 1, RESET_W, 20, 0xFF888888);
@@ -144,6 +161,7 @@ public class BindScreen extends Screen {
 
     @Override
     public boolean mouseClicked(double mx, double my, int button) {
+        if (waitingPad != null) return true;
         if (waiting != null) {
             BindStore.set(waiting, KeyModifier.getActiveModifier(),
                     InputConstants.Type.MOUSE.getOrCreate(button));
@@ -160,14 +178,20 @@ public class BindScreen extends Screen {
 
         int rowY = listTop() + idx * ROW_H - (int) scroll;
         int right = listRight();
-        int keyX = right - RESET_W - 4 - KEY_W;
+        int padX = right - RESET_W - 4 - PAD_W;
+        int keyX = padX - 4 - KEY_W;
         int resetX = right - RESET_W;
         if (my < rowY + 1 || my >= rowY + 21) return false;
         if (mx >= keyX && mx < keyX + KEY_W) {
             waiting = m;
             return true;
         }
-        if (mx >= resetX && mx < resetX + RESET_W && !m.isDefault()) {
+        if (mx >= padX && mx < padX + PAD_W) {
+            waitingPad = m;
+            lastPad = GamepadInput.poll();
+            return true;
+        }
+        if (mx >= resetX && mx < resetX + RESET_W && (!m.isDefault() || BindStore.padMask(m) != 0)) {
             BindStore.reset(m);
             return true;
         }
@@ -176,6 +200,13 @@ public class BindScreen extends Screen {
 
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
+        if (waitingPad != null) {
+            if (key == GLFW.GLFW_KEY_DELETE || key == GLFW.GLFW_KEY_BACKSPACE) BindStore.setPad(waitingPad, 0);
+            if (key == GLFW.GLFW_KEY_ESCAPE || key == GLFW.GLFW_KEY_DELETE || key == GLFW.GLFW_KEY_BACKSPACE) {
+                waitingPad = null;
+            }
+            return true;
+        }
         if (waiting != null) {
             if (key == GLFW.GLFW_KEY_ESCAPE) {
                 waiting = null;
@@ -189,6 +220,21 @@ public class BindScreen extends Screen {
             return true;
         }
         return super.keyPressed(key, scan, mods);
+    }
+
+    /** Captura o proximo botao do controle (com ate 1 botao segurado para combinar). */
+    private void pollPad() {
+        int cur = GamepadInput.poll();
+        int newly = cur & ~lastPad;
+        if (waitingPad != null && newly != 0) {
+            int nb = Integer.lowestOneBit(newly);
+            int others = cur & ~nb;
+            // modificador so pode ser LB, RB, LT ou RT; senao ignora o botao extra
+            int mod = others & ((1 << 4) | (1 << 5) | (1 << 15) | (1 << 16));
+            BindStore.setPad(waitingPad, nb | Integer.lowestOneBit(mod));
+            waitingPad = null;
+        }
+        lastPad = cur;
     }
 
     private static boolean isModifierKey(int key) {

@@ -16,6 +16,6 @@ O GitHub Actions (`Build Keybind Helper`) tambem gera o jar como artefato.
 
 ## Controle (Xbox)
 Cada acao tem uma coluna de controle. Clique nela e aperte o botao desejado; para combinar,
-segure LB/RB/LT/RT e aperte outro botao (ex.: LB + A). A combinacao maior tem prioridade sobre o botao simples.
+aperte ate 3 botoes juntos (ex.: LB + A, ou LB + RB + A) e solte tudo para gravar. A combinacao maior tem prioridade sobre o botao simples.
 Delete limpa. As binds do controle ficam em `config/keybindhelper.json` (`pad`).
 Se outro mod de controle (Controlify/Controllable) ja usa o mesmo botao, os dois agem; escolha combinacoes livres.

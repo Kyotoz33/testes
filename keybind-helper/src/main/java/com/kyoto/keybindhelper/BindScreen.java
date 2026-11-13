@@ -31,6 +31,7 @@ public class BindScreen extends Screen {
     private KeyMapping waiting = null;
     private KeyMapping waitingPad = null;
     private int lastPad = GamepadInput.poll();
+    private int chord = 0;
 
     /** Linha da lista: ou um titulo de categoria, ou um mapeamento. */
     private record Row(String header, KeyMapping mapping) {}
@@ -115,7 +116,7 @@ public class BindScreen extends Screen {
 
         pollPad();
         if (waitingPad != null) {
-            g.drawCenteredString(font, Component.literal("Aperte o botao do controle (segure LB/RB/LT/RT + botao para combinar). ESC cancela, Delete limpa")
+            g.drawCenteredString(font, Component.literal("Aperte o botao ou combinacao (ate 3 botoes) e solte. ESC cancela, Delete limpa")
                     .withStyle(ChatFormatting.GREEN), width / 2, height - 44, 0xFFFFFF);
         } else if (waiting != null) {
             g.drawCenteredString(font, Component.literal("Pressione uma tecla ou botao do mouse (ESC cancela)")
@@ -147,7 +148,7 @@ public class BindScreen extends Screen {
         g.fill(padX, y + 1, padX + PAD_W, y + 21, hoverPad ? 0xFF555555 : 0xFF333333);
         g.renderOutline(padX, y + 1, PAD_W, 20, padWait ? 0xFF55FF55 : 0xFF888888);
         int pm = BindStore.padMask(m);
-        String ptxt = padWait ? "> ... <" : GamepadInput.describe(pm);
+        String ptxt = padWait ? "> " + (chord == 0 ? "..." : GamepadInput.describe(chord)) + " <" : GamepadInput.describe(pm);
         g.drawCenteredString(font, Component.literal(ptxt).withStyle(padWait ? ChatFormatting.GREEN : ChatFormatting.WHITE),
                 padX + PAD_W / 2, y + 7, 0xFFFFFF);
 
@@ -188,6 +189,7 @@ public class BindScreen extends Screen {
         }
         if (mx >= padX && mx < padX + PAD_W) {
             waitingPad = m;
+            chord = 0;
             lastPad = GamepadInput.poll();
             return true;
         }
@@ -222,17 +224,21 @@ public class BindScreen extends Screen {
         return super.keyPressed(key, scan, mods);
     }
 
-    /** Captura o proximo botao do controle (com ate 1 botao segurado para combinar). */
+    /** Captura uma combinacao de ate 3 botoes: grava quando todos forem soltos. */
     private void pollPad() {
         int cur = GamepadInput.poll();
-        int newly = cur & ~lastPad;
-        if (waitingPad != null && newly != 0) {
-            int nb = Integer.lowestOneBit(newly);
-            int others = cur & ~nb;
-            // modificador so pode ser LB, RB, LT ou RT; senao ignora o botao extra
-            int mod = others & ((1 << 4) | (1 << 5) | (1 << 15) | (1 << 16));
-            BindStore.setPad(waitingPad, nb | Integer.lowestOneBit(mod));
-            waitingPad = null;
+        if (waitingPad != null) {
+            int newly = cur & ~lastPad;
+            while (newly != 0 && Integer.bitCount(chord) < 3) {
+                int bit = Integer.lowestOneBit(newly);
+                chord |= bit;
+                newly &= ~bit;
+            }
+            if (cur == 0 && chord != 0) {
+                BindStore.setPad(waitingPad, chord);
+                waitingPad = null;
+                chord = 0;
+            }
         }
         lastPad = cur;
     }

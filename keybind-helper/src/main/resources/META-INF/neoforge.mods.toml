@@ -1,0 +1,23 @@
+modLoader = "javafml"
+loaderVersion = "[4,)"
+license = "MIT"
+
+[[mods]]
+modId = "keybindhelper"
+version = "${mod_version}"
+displayName = "Keybind Helper"
+description = "Tela propria para configurar as teclas de qualquer mod (util quando o launcher bloqueia a tela de Controles). Abra com Shift Direito."
+
+[[dependencies.keybindhelper]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1,)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.keybindhelper]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.22)"
+ordering = "NONE"
+side = "CLIENT"

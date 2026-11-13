@@ -1,0 +1,28 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.78'
+}
+
+version = '1.0.0'
+group = 'com.kyoto.keybindhelper'
+base { archivesName = 'keybindhelper' }
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+neoForge {
+    version = '21.1.172'
+    runs {
+        client { client() }
+    }
+    mods {
+        keybindhelper { sourceSet sourceSets.main }
+    }
+}
+
+repositories { mavenCentral() }
+
+tasks.withType(ProcessResources).configureEach {
+    var props = [mod_version: project.version]
+    inputs.properties props
+    filesMatching('META-INF/neoforge.mods.toml') { expand props }
+}
